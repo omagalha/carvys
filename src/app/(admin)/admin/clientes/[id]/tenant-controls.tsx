@@ -13,7 +13,7 @@ const STATUSES = [
 const PLANS = [
   { value: 'trial',   label: 'Trial' },
   { value: 'starter', label: 'Starter — R$97/mês' },
-  { value: 'pro',     label: 'Pro — R$197/mês' },
+  { value: 'pro',     label: 'Pro — R$147/mês' },
   { value: 'elite',   label: 'Elite — R$297/mês' },
 ]
 

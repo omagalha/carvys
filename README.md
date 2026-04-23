@@ -1,47 +1,128 @@
-# CARVYS
+# 🚀 Carvys
 
-Initial architecture baseline for the CARVYS MVP.
+Sistema SaaS de automação comercial para negócios locais, com foco em geração, gestão e conversão de leads.
 
-CARVYS is a multi-tenant B2B SaaS for small and mid-sized vehicle dealers. The MVP focuses on three core modules:
+---
 
-- Leads
-- Vehicles
-- Follow-ups
+## 🧠 Visão do Produto
 
-The product direction is:
+O **Carvys** é uma plataforma multi-tenant que permite empresas gerenciarem seus leads, acompanhar negociações e automatizar o processo de vendas.
 
-- dark-first UI
-- mobile-first workflows
-- premium visual identity
-- WhatsApp-centered sales flow
-- radical simplicity for daily use
+Criado para escalar operações comerciais com organização, velocidade e inteligência.
 
-## Recommended stack
+---
 
-- Next.js 16
-- TypeScript
-- Tailwind CSS v4
-- shadcn/ui
-- Lucide Icons
-- React Hook Form + Zod
-- TanStack Table
-- Supabase
-- PostgreSQL + RLS
-- Supabase Auth
-- Supabase Storage
-- Asaas
-- Z-API
-- Vercel
+## 🎯 Problema que resolve
 
-## Docs
+Negócios locais perdem vendas todos os dias por:
+- falta de controle de leads
+- ausência de follow-up
+- processos manuais no WhatsApp
+- desorganização comercial
 
-- [Architecture](docs/ARCHITECTURE.md)
-- [Initial Supabase schema blueprint](supabase/migrations/0001_initial_core.sql)
+---
 
-## Immediate next steps
+## 💡 Solução
 
-1. Scaffold the Next.js app with the App Router.
-2. Connect Supabase SSR auth.
-3. Apply the initial database migration.
-4. Build the app shell and tenant switcher.
-5. Deliver the Leads module first.
+O Carvys centraliza:
+- 📥 Captura de leads
+- 💬 Integração com WhatsApp
+- 📊 Gestão de funil de vendas
+- 🔁 Follow-ups automatizados
+- 📈 Controle por empresa (multi-tenant)
+
+---
+
+## 🏗️ Arquitetura
+
+- Multi-tenant (isolamento por cliente)
+- Controle de acesso por papéis (admin/member)
+- Backend com regras seguras (RLS)
+- Integração com serviços externos (pagamento e WhatsApp)
+
+---
+
+## 🧰 Stack
+
+- Frontend: Next.js + React + TypeScript
+- Backend: Supabase (PostgreSQL + Auth + RLS)
+- Validação: Zod
+- Integrações:
+  - Asaas (pagamentos)
+  - Z-API (WhatsApp)
+
+---
+
+## 📂 Estrutura do Projeto
+
+
+/app → rotas e páginas (Next.js)
+/components → componentes reutilizáveis
+/lib → utilitários e integrações
+/supabase → migrations e configuração do banco
+/docs → documentação de arquitetura
+
+
+---
+
+## 🔐 Variáveis de Ambiente
+
+Crie um arquivo `.env.local` baseado em:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+ASAAS_API_KEY=
+ZAPI_INSTANCE_ID=
+ZAPI_TOKEN=
+
+▶️ Como rodar o projeto
+# instalar dependências
+npm install
+
+# rodar ambiente de desenvolvimento
+npm run dev
+
+Acesse:
+http://localhost:3000
+
+📌 Funcionalidades (MVP)
+ Autenticação de usuários
+ Multi-tenant (empresas)
+ Gestão de leads
+ Follow-ups
+ Integração com WhatsApp
+ Dashboard analítico
+ Automações avançadas
+ Sistema de planos e cobrança
+
+🧱 Roadmap
+Painel de métricas comerciais
+Automação de mensagens
+Inteligência de conversão (IA)
+CRM visual (pipeline)
+Integração com múltiplos canais
+💼 Modelo de Negócio
+
+SaaS por assinatura:
+
+Plano base mensal
+Upsell por automações
+White-label para parceiros
+📈 Objetivo
+
+Transformar o Carvys em uma plataforma completa de automação comercial para pequenas e médias empresas.
+
+
+📩 Contato
+
+📧 contato@carvys.com.br
+
+⚠️ Status
+
+🚧 Em desenvolvimento ativo
+
+
+---
