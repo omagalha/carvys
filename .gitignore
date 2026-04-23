@@ -1,0 +1,93 @@
+# =========================
+# 🔐 ENV (SEGREDOS)
+# =========================
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env*.local
+next-env.d.ts
+
+# =========================
+# 🧱 NEXT.JS
+# =========================
+.next/
+out/
+build/
+
+# =========================
+# 📦 NODE
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# 🧠 TYPESCRIPT
+# =========================
+*.tsbuildinfo
+
+# =========================
+# 🗃️ LOGS
+# =========================
+logs
+*.log
+
+# =========================
+# 🖼️ UPLOADS / STORAGE LOCAL
+# =========================
+uploads/
+storage/
+tmp/
+temp/
+
+# =========================
+# 🧪 TESTES
+# =========================
+coverage/
+.nyc_output/
+
+# =========================
+# 🧰 IDE / EDITOR
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# =========================
+# 🖥️ SISTEMA OPERACIONAL
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# 🧱 BUILD / DIST
+# =========================
+dist/
+.cache/
+
+# =========================
+# 🐳 DOCKER
+# =========================
+.dockerignore
+docker-compose.override.yml
+
+# =========================
+# 🔥 VERCEL
+# =========================
+.vercel
+
+# =========================
+# 🧪 CACHE
+# =========================
+.eslintcache
+
+# =========================
+# 🧠 SUPABASE (LOCAL DEV)
+# =========================
+.supabase/

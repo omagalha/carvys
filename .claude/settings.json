@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx next *)",
+      "Bash(node -e \"require\\('next'\\)\")",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/next/package.json'\\).version\\)\")",
+      "Bash(NODE_OPTIONS=\"--enable-source-maps\" npx next build)",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/@tailwindcss/postcss/package.json'\\).version\\)\")",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/tailwindcss/package.json'\\).version\\)\")",
+      "Bash(node -e ' *)"
+    ]
+  }
+}
