@@ -24,12 +24,25 @@ export async function updateTenantStatus(
   }
 
   const admin = createAdminClient()
+  const update: Record<string, unknown> = { status }
+  if (status === 'canceled') update.canceled_at = new Date().toISOString()
+  else update.canceled_at = null
+
   const { error } = await admin
     .from('tenants')
-    .update({ status })
+    .update(update)
     .eq('id', tenantId)
 
   if (error) return { error: 'Erro ao atualizar status.' }
+
+  const STATUS_LABEL: Record<string, string> = {
+    trial: 'Trial', active: 'Ativo', past_due: 'Inadimplente', canceled: 'Cancelado',
+  }
+  await admin.from('tenant_events').insert({
+    tenant_id: tenantId,
+    type: 'status_changed',
+    description: `Status alterado para ${STATUS_LABEL[status] ?? status}`,
+  })
 
   revalidatePath('/admin/clientes')
   revalidatePath(`/admin/clientes/${tenantId}`)
@@ -53,6 +66,15 @@ export async function updateTenantPlan(
     .eq('id', tenantId)
 
   if (error) return { error: 'Erro ao atualizar plano.' }
+
+  const PLAN_LABEL: Record<string, string> = {
+    trial: 'Trial', starter: 'Starter', pro: 'Pro', elite: 'Elite',
+  }
+  await admin.from('tenant_events').insert({
+    tenant_id: tenantId,
+    type: 'plan_changed',
+    description: `Plano alterado para ${PLAN_LABEL[plan_code] ?? plan_code}`,
+  })
 
   revalidatePath('/admin/clientes')
   revalidatePath(`/admin/clientes/${tenantId}`)

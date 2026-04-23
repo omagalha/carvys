@@ -1,11 +1,34 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Mail, Phone, Car, Users, Calendar } from 'lucide-react'
+import { ArrowLeft, Mail, Phone, Car, Users, Calendar, MessageCircle, FileText, Activity } from 'lucide-react'
 import { getTenantById } from '@/server/queries/admin'
+import { getTenantNotes, getTenantEvents } from '@/server/queries/admin-notes'
 import { TenantControls } from './tenant-controls'
+import { NotesForm } from './notes-form'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+}
+
+function formatDateTime(iso: string) {
+  return new Date(iso).toLocaleString('pt-BR', {
+    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  })
+}
+
+function isNew(createdAt: string) {
+  return Date.now() - new Date(createdAt).getTime() < 24 * 60 * 60 * 1000
+}
+
+const WELCOME_MSG = (name: string) =>
+  encodeURIComponent(
+    `Olá ${name}! Seja muito bem-vindo(a) ao Carvys 🚗\nSeu trial de 7 dias já começou. Estou aqui para te ajudar a configurar tudo.\nQualquer dúvida é só chamar!`
+  )
+
+const EVENT_ICON: Record<string, string> = {
+  created:        '🟢',
+  status_changed: '🔄',
+  plan_changed:   '💳',
 }
 
 export default async function ClienteDetailPage({
@@ -14,7 +37,11 @@ export default async function ClienteDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const tenant = await getTenantById(id)
+  const [tenant, notes, events] = await Promise.all([
+    getTenantById(id),
+    getTenantNotes(id),
+    getTenantEvents(id),
+  ])
   if (!tenant) notFound()
 
   const stats = [
@@ -22,6 +49,9 @@ export default async function ClienteDetailPage({
     { label: 'Leads no funil',       value: tenant.lead_count,   icon: Users },
     { label: 'Usuários ativos',      value: tenant.member_count, icon: Users },
   ]
+
+  const newClient = isNew(tenant.created_at)
+  const waPhone = tenant.owner?.phone?.replace(/\D/g, '')
 
   return (
     <div className="p-6 flex flex-col gap-6 max-w-2xl">
@@ -38,6 +68,25 @@ export default async function ClienteDetailPage({
         </div>
       </div>
 
+      {/* Banner boas-vindas */}
+      {newClient && waPhone && (
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-green/20 bg-green/5 px-5 py-4">
+          <div className="flex flex-col gap-0.5">
+            <p className="font-body text-sm font-semibold text-white">Novo cliente! 🎉</p>
+            <p className="font-body text-xs text-slate">Criou a conta há menos de 24h. Mande uma mensagem de boas-vindas.</p>
+          </div>
+          <a
+            href={`https://wa.me/55${waPhone}?text=${WELCOME_MSG(tenant.name)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex shrink-0 items-center gap-2 rounded-lg bg-green px-4 py-2 font-body text-sm font-semibold text-void hover:opacity-90 transition-opacity"
+          >
+            <MessageCircle size={14} />
+            Enviar
+          </a>
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         {stats.map(({ label, value, icon: Icon }) => (
@@ -49,7 +98,7 @@ export default async function ClienteDetailPage({
         ))}
       </div>
 
-      {/* Dono da loja */}
+      {/* Responsável */}
       <section className="flex flex-col gap-3 rounded-xl bg-deep border border-surface p-5">
         <h2 className="font-body font-semibold text-white text-sm">Responsável</h2>
         {tenant.owner ? (
@@ -76,6 +125,14 @@ export default async function ClienteDetailPage({
                 </a>
               </div>
             )}
+            {tenant.owner.last_sign_in_at && (
+              <div className="flex items-center gap-2">
+                <Calendar size={14} className="text-slate" />
+                <span className="font-body text-xs text-slate">
+                  Último acesso: {formatDate(tenant.owner.last_sign_in_at)}
+                </span>
+              </div>
+            )}
           </div>
         ) : (
           <p className="font-body text-xs text-slate">Sem responsável vinculado</p>
@@ -100,6 +157,60 @@ export default async function ClienteDetailPage({
           currentStatus={tenant.status}
           currentPlan={tenant.plan_code}
         />
+      </section>
+
+      {/* Notas internas */}
+      <section className="flex flex-col gap-3 rounded-xl bg-deep border border-surface p-5">
+        <div className="flex items-center gap-2">
+          <FileText size={14} className="text-slate" />
+          <h2 className="font-body font-semibold text-white text-sm">Notas internas</h2>
+        </div>
+
+        <NotesForm tenantId={tenant.id} />
+
+        {notes.length === 0 ? (
+          <p className="font-body text-xs text-slate">Nenhuma anotação ainda.</p>
+        ) : (
+          <div className="flex flex-col gap-2 mt-1">
+            {notes.map(note => (
+              <div key={note.id} className="flex flex-col gap-1 rounded-lg bg-surface/50 px-3 py-2.5">
+                <p className="font-body text-sm text-white whitespace-pre-wrap">{note.content}</p>
+                <p className="font-body text-[10px] text-slate">
+                  {note.created_by} · {formatDateTime(note.created_at)}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Timeline */}
+      <section className="flex flex-col gap-3 rounded-xl bg-deep border border-surface p-5">
+        <div className="flex items-center gap-2">
+          <Activity size={14} className="text-slate" />
+          <h2 className="font-body font-semibold text-white text-sm">Timeline</h2>
+        </div>
+
+        {events.length === 0 ? (
+          <p className="font-body text-xs text-slate">Nenhum evento registrado.</p>
+        ) : (
+          <div className="flex flex-col gap-0">
+            {events.map((event, i) => (
+              <div key={event.id} className="flex gap-3">
+                <div className="flex flex-col items-center">
+                  <span className="text-sm leading-none mt-0.5">{EVENT_ICON[event.type] ?? '📌'}</span>
+                  {i < events.length - 1 && (
+                    <div className="w-px flex-1 bg-surface mt-1 mb-1" />
+                  )}
+                </div>
+                <div className="flex flex-col gap-0.5 pb-4">
+                  <p className="font-body text-sm text-white">{event.description}</p>
+                  <p className="font-body text-[10px] text-slate">{formatDateTime(event.created_at)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   )

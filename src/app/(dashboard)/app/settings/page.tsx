@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
-import { User, Store, LogOut } from 'lucide-react'
+import Link from 'next/link'
+import { User, Store, LogOut, CreditCard, ArrowRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getUserTenants } from '@/server/queries/tenants'
 import { logout } from '@/server/actions/auth'
@@ -63,6 +64,34 @@ export default async function SettingsPage() {
           slug={tenant.slug}
           plan={tenantPlan}
         />
+      </section>
+
+      {/* Plano */}
+      <section className="flex flex-col gap-4 rounded-xl bg-deep border border-surface p-5">
+        <div className="flex items-center gap-2">
+          <CreditCard size={16} className="text-green" />
+          <h2 className="font-body font-semibold text-white text-sm">Plano e cobrança</h2>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-0.5">
+            <span className="font-body text-sm text-white capitalize">
+              {tenantPlan === 'trial' ? 'Trial gratuito' : `Plano ${tenantPlan}`}
+            </span>
+            <span className="font-body text-xs text-slate">
+              {tenantPlan === 'trial' ? '7 dias de acesso completo' :
+               tenantPlan === 'starter' ? 'R$97/mês' :
+               tenantPlan === 'pro' ? 'R$147/mês' : 'R$297/mês'}
+            </span>
+          </div>
+          <Link
+            href="/app/billing"
+            className="flex items-center gap-1.5 h-9 px-4 rounded-lg border border-surface font-body text-sm text-slate hover:text-white hover:border-slate/40 transition-colors"
+          >
+            {tenantPlan === 'trial' ? 'Assinar' : 'Gerenciar'}
+            <ArrowRight size={13} />
+          </Link>
+        </div>
       </section>
 
       {/* Conta */}

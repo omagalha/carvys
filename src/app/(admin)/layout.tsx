@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { isAdmin } from '@/lib/admin'
 import { logout } from '@/server/actions/auth'
-import { LayoutDashboard, Users, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, LogOut, BarChart3 } from 'lucide-react'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -31,6 +31,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/admin/clientes" className="flex items-center gap-1.5 h-8 px-3 rounded-lg font-body text-xs text-slate hover:text-white hover:bg-surface transition-colors">
               <Users size={14} />
               Clientes
+            </Link>
+            <Link href="/admin/financeiro" className="flex items-center gap-1.5 h-8 px-3 rounded-lg font-body text-xs text-slate hover:text-white hover:bg-surface transition-colors">
+              <BarChart3 size={14} />
+              Financeiro
             </Link>
           </nav>
         </div>

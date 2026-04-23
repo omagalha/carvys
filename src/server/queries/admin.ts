@@ -7,7 +7,7 @@ export type AdminTenant = {
   plan_code: string
   status: string
   created_at: string
-  owner: { full_name: string | null; phone: string | null; email: string | null } | null
+  owner: { full_name: string | null; phone: string | null; email: string | null; last_sign_in_at: string | null } | null
   member_count: number
   vehicle_count: number
   lead_count: number
@@ -56,6 +56,7 @@ export async function getAllTenants(): Promise<AdminTenant[]> {
           full_name: profile?.full_name ?? null,
           phone: profile?.phone ?? null,
           email: authUser?.user?.email ?? null,
+          last_sign_in_at: authUser?.user?.last_sign_in_at ?? null,
         }
       }
 

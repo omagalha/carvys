@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 
 const createTenantSchema = z.object({
   name: z.string().min(2, 'Nome muito curto').max(80),
+  phone: z.string().min(10, 'Telefone inválido').max(20),
 })
 
 export type CreateTenantState = { error: string }
@@ -24,7 +25,10 @@ export async function createTenant(
   _state: CreateTenantState,
   formData: FormData
 ): Promise<CreateTenantState> {
-  const raw = { name: formData.get('name') as string }
+  const raw = {
+    name: formData.get('name') as string,
+    phone: formData.get('phone') as string,
+  }
   const parsed = createTenantSchema.safeParse(raw)
 
   if (!parsed.success) {
@@ -65,6 +69,13 @@ export async function createTenant(
     p_name: parsed.data.name,
     p_slug: slug,
   })
+
+  if (!error) {
+    await supabase
+      .from('profiles')
+      .update({ phone: parsed.data.phone })
+      .eq('id', user.id)
+  }
 
   if (error) {
     console.error('[createTenant] error', error.code, error.message)

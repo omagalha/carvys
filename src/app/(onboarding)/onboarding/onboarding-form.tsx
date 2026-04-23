@@ -36,6 +36,13 @@ export function OnboardingForm() {
                 autoFocus
                 required
               />
+              <Input
+                label="Seu WhatsApp"
+                name="phone"
+                type="tel"
+                placeholder="(11) 99999-9999"
+                required
+              />
 
               {state?.error ? (
                 <p className="font-body text-center text-xs text-alert">
