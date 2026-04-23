@@ -58,15 +58,25 @@ export async function createLead(
 }
 
 export async function updateLeadStage(leadId: string, stage: string) {
+  return updateLeadStageWithReason(leadId, stage, null)
+}
+
+export async function updateLeadStageWithReason(leadId: string, stage: string, lossReason: string | null) {
   const supabase = await createClient()
   const memberships = await getUserTenants()
   if (memberships.length === 0) return
 
   const tenant = memberships[0].tenants as { id: string }
 
+  const patch: Record<string, unknown> = {
+    stage,
+    last_contact_at: new Date().toISOString(),
+    loss_reason: stage === 'lost' ? lossReason : null,
+  }
+
   await supabase
     .from('leads')
-    .update({ stage, last_contact_at: new Date().toISOString() })
+    .update(patch)
     .eq('id', leadId)
     .eq('tenant_id', tenant.id)
 

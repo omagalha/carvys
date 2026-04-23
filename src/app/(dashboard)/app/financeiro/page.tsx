@@ -125,6 +125,43 @@ export default async function FinanceiroPage({
   const categorySorted = Object.entries(byCategory).sort((a, b) => b[1] - a[1])
   const maxCategoryAmount = categorySorted[0]?.[1] ?? 1
 
+  // --- Weekly chart aggregation ---
+  function weeklyBuckets(
+    salesData: typeof sales,
+    entriesData: typeof entries,
+    yr: number,
+    mo: number,
+  ) {
+    const daysInMonth = new Date(yr, mo, 0).getDate()
+    const ranges: [number, number, string][] = [
+      [1, 7, 'S1'], [8, 14, 'S2'], [15, 21, 'S3'], [22, 28, 'S4'],
+    ]
+    if (daysInMonth > 28) ranges.push([29, daysInMonth, 'S5'])
+
+    return ranges.map(([start, end, label]) => {
+      const wSales = salesData.filter(s => {
+        const d = new Date(s.sold_at).getDate()
+        return d >= start && d <= end
+      })
+      const wEntries = entriesData.filter(e => {
+        const d = parseInt(e.date.split('-')[2])
+        return d >= start && d <= end
+      })
+      const income   = wSales.reduce((s, v) => s + v.sale_price, 0)
+                     + wEntries.filter(e => e.type === 'income').reduce((s, e) => s + e.amount, 0)
+      const expenses = wEntries.filter(e => e.type === 'expense').reduce((s, e) => s + e.amount, 0)
+      return { label, income, expenses }
+    })
+  }
+
+  const currentWeeks = weeklyBuckets(sales, entries, year, month)
+  const prevWeeks    = weeklyBuckets(prevSales, prevEntries, prevMonthYear, prevMonthNum)
+
+  const chartWeeks: WeekBar[] = currentWeeks.map((w, i) => ({
+    ...w,
+    prevIncome: prevWeeks[i]?.income ?? 0,
+  }))
+
   // --- Sales by vehicle (for cross-referencing expenses) ---
   const soldVehicleIds = new Set(sales.map(s => s.vehicle_id))
 
@@ -230,6 +267,12 @@ export default async function FinanceiroPage({
           icon={<Plus size={15} />}
           className="bg-surface border border-surface text-white"
         />
+      </div>
+
+      {/* Chart */}
+      <div className="flex flex-col gap-2">
+        <h2 className="font-body font-semibold text-white text-sm">Entradas vs Saídas</h2>
+        <RevenueChart weeks={chartWeeks} />
       </div>
 
       {/* Main content */}

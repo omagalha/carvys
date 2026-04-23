@@ -8,6 +8,7 @@ import { getLeadFollowUps } from '@/server/queries/follow-ups'
 import type { FollowUp } from '@/server/queries/follow-ups'
 import { StageSelect } from './stage-select'
 import { NotesEditor } from './notes-editor'
+import { WATemplates } from './wa-templates'
 
 const SOURCE_LABEL: Record<string, string> = {
   instagram: 'Instagram',
@@ -81,7 +82,7 @@ export default async function LeadDetailPage({
       {/* Etapa */}
       <section className="flex flex-col gap-3 rounded-xl bg-deep border border-surface p-5">
         <h2 className="font-body font-semibold text-white text-sm">Etapa do funil</h2>
-        <StageSelect leadId={lead.id} currentStage={lead.stage} />
+        <StageSelect leadId={lead.id} currentStage={lead.stage} currentLossReason={lead.loss_reason} />
       </section>
 
       {/* Contato */}
@@ -118,6 +119,17 @@ export default async function LeadDetailPage({
           </div>
         )}
       </section>
+
+      {/* Templates WhatsApp */}
+      <WATemplates
+        stage={lead.stage}
+        leadName={lead.name}
+        phone={lead.phone}
+        vehicleName={lead.vehicles
+          ? `${lead.vehicles.brand} ${lead.vehicles.model}${lead.vehicles.year_model ? ` ${lead.vehicles.year_model}` : ''}`
+          : undefined
+        }
+      />
 
       {/* Veículo de interesse */}
       {lead.vehicles && (

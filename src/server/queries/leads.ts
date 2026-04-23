@@ -10,6 +10,7 @@ export type Lead = {
   source: string | null
   stage: LeadStage
   notes: string | null
+  loss_reason: string | null
   interest_vehicle_id: string | null
   last_contact_at: string | null
   next_follow_up_at: string | null
