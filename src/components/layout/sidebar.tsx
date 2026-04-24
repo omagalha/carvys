@@ -2,24 +2,33 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Car, Users, Bell, TrendingUp, Settings } from 'lucide-react'
+import { LayoutDashboard, Car, Users, Bell, TrendingUp, Settings, ExternalLink } from 'lucide-react'
 
-const items = [
+const navItems = [
   { href: '/app/dashboard',   label: 'Dashboard',   icon: LayoutDashboard },
   { href: '/app/vehicles',    label: 'Estoque',     icon: Car },
   { href: '/app/leads',       label: 'Leads',       icon: Users },
   { href: '/app/follow-ups',  label: 'Tarefas',     icon: Bell },
   { href: '/app/financeiro',  label: 'Financeiro',  icon: TrendingUp },
-  { href: '/app/settings',    label: 'Config',      icon: Settings },
 ]
 
-export function Sidebar() {
+const PLANS_WITH_SITE = ['trial', 'pro', 'elite']
+
+interface Props {
+  slug: string
+  plan: string
+}
+
+export function Sidebar({ slug, plan }: Props) {
   const pathname = usePathname()
+  const hasSite = PLANS_WITH_SITE.includes(plan)
 
   return (
     <aside className="hidden md:flex flex-col w-56 shrink-0 border-r border-surface bg-deep h-full">
-      <nav className="flex flex-col gap-1 p-3 pt-4">
-        {items.map(({ href, label, icon: Icon }) => {
+
+      {/* Nav principal */}
+      <nav className="flex flex-col gap-1 p-3 pt-4 flex-1">
+        {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + '/')
           return (
             <Link
@@ -38,6 +47,33 @@ export function Sidebar() {
           )
         })}
       </nav>
+
+      {/* Fundo: link do site + config */}
+      <div className="flex flex-col gap-1 p-3 border-t border-surface">
+        {hasSite && (
+          <a
+            href={`/loja/${slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 h-10 px-3 rounded-lg font-body text-sm text-slate hover:text-green hover:bg-green/5 transition-colors group"
+          >
+            <ExternalLink size={18} strokeWidth={1.75} className="group-hover:text-green" />
+            Ir para o site
+          </a>
+        )}
+        <Link
+          href="/app/settings"
+          className={[
+            'flex items-center gap-3 h-10 px-3 rounded-lg font-body text-sm transition-colors',
+            pathname === '/app/settings'
+              ? 'bg-green/10 text-green font-medium'
+              : 'text-slate hover:text-white hover:bg-surface',
+          ].join(' ')}
+        >
+          <Settings size={18} strokeWidth={pathname === '/app/settings' ? 2.5 : 1.75} />
+          Config
+        </Link>
+      </div>
     </aside>
   )
 }

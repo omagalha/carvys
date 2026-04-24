@@ -12,6 +12,7 @@ const profileSchema = z.object({
 
 const tenantSchema = z.object({
   name: z.string().min(2, 'Nome muito curto').max(80),
+  whatsapp_phone: z.string().optional(),
 })
 
 export type SettingsState = { error: string; success?: boolean }
@@ -54,7 +55,10 @@ export async function updateTenant(
   _state: SettingsState,
   formData: FormData
 ): Promise<SettingsState> {
-  const raw = { name: formData.get('name') }
+  const raw = {
+    name: formData.get('name'),
+    whatsapp_phone: formData.get('whatsapp_phone') || undefined,
+  }
   const parsed = tenantSchema.safeParse(raw)
   if (!parsed.success) return { error: parsed.error.issues[0].message }
 
@@ -66,7 +70,10 @@ export async function updateTenant(
   const supabase = await createClient()
   const { error } = await supabase
     .from('tenants')
-    .update({ name: parsed.data.name })
+    .update({
+      name: parsed.data.name,
+      whatsapp_phone: parsed.data.whatsapp_phone ?? null,
+    })
     .eq('id', tenant.id)
 
   if (error) {

@@ -8,7 +8,9 @@ export type MembershipWithTenant = {
     id: string
     name: string
     slug: string
+    plan_code: string
     status: TenantStatus
+    whatsapp_phone: string | null
   }
 }
 
@@ -38,7 +40,7 @@ export async function getUserTenants(): Promise<MembershipWithTenant[]> {
 
   const { data: tenants, error: tenantsError } = await supabase
     .from('tenants')
-    .select('id, name, slug, status')
+    .select('id, name, slug, plan_code, status, whatsapp_phone')
     .in('id', tenantIds)
 
   if (tenantsError) {

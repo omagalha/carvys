@@ -11,9 +11,10 @@ interface Props {
   name: string
   slug: string
   plan: string
+  whatsappPhone: string | null
 }
 
-export function TenantForm({ name, slug, plan }: Props) {
+export function TenantForm({ name, slug, plan, whatsappPhone }: Props) {
   const [state, formAction] = useActionState(updateTenant, initialState)
 
   const PLAN_LABEL: Record<string, string> = {
@@ -31,6 +32,13 @@ export function TenantForm({ name, slug, plan }: Props) {
         defaultValue={name}
         placeholder="Minha Revenda"
         required
+      />
+      <Input
+        label="WhatsApp da loja"
+        name="whatsapp_phone"
+        type="tel"
+        defaultValue={whatsappPhone ?? ''}
+        placeholder="(11) 99999-9999"
       />
 
       <div className="flex flex-col gap-1.5">

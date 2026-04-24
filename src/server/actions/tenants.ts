@@ -75,6 +75,20 @@ export async function createTenant(
       .from('profiles')
       .update({ phone: parsed.data.phone })
       .eq('id', user.id)
+
+    const { data: newMembership } = await supabase
+      .from('tenant_memberships')
+      .select('tenant_id')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .single()
+
+    if (newMembership) {
+      await supabase
+        .from('tenants')
+        .update({ whatsapp_phone: parsed.data.phone })
+        .eq('id', newMembership.tenant_id)
+    }
   }
 
   if (error) {

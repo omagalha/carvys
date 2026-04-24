@@ -7,7 +7,8 @@
       "Bash(NODE_OPTIONS=\"--enable-source-maps\" npx next build)",
       "Bash(node -e \"console.log\\(require\\('./node_modules/@tailwindcss/postcss/package.json'\\).version\\)\")",
       "Bash(node -e \"console.log\\(require\\('./node_modules/tailwindcss/package.json'\\).version\\)\")",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(find \"c:\\\\\\\\Users\\\\\\\\Thales Magalhães\\\\\\\\OneDrive\\\\\\\\Desktop\\\\\\\\carvys\\\\\\\\Carvys\\\\\\\\src\\\\\\\\app\\\\\\\\\\(dashboard\\)\\\\\\\\app\\\\\\\\financeiro\" -type f -name \"*.tsx\" -o -name \"*.ts\")"
     ]
   }
 }

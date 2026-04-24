@@ -14,7 +14,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const memberships = await getUserTenants()
   if (memberships.length === 0) redirect('/onboarding')
 
-  const tenant = (memberships[0].tenants as { id: string; name: string; slug: string; status: string })
+  const tenant = memberships[0].tenants
   const profile = user.user_metadata
 
   const initials = (profile?.full_name as string | undefined)
@@ -29,7 +29,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <TopBar tenantName={tenant.name} userInitials={initials} />
 
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
+        <Sidebar slug={tenant.slug} plan={tenant.plan_code} />
 
         <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
           {children}

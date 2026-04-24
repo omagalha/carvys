@@ -22,7 +22,7 @@ function greeting(hour: number) {
 
 function coverUrl(path: string | null) {
   if (!path) return null
-  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/vehicle-photos/${path}`
+  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/vehicles/${path}`
 }
 
 const TYPE_LABEL: Record<string, string> = {

@@ -15,7 +15,7 @@ export async function getTenantBySlug(slug: string): Promise<PublicTenant | null
 
   const { data: tenant } = await supabase
     .from('tenants')
-    .select('id, name, slug, plan_code, status')
+    .select('id, name, slug, plan_code, status, whatsapp_phone')
     .eq('slug', slug)
     .in('status', ['active', 'trial'])
     .single()
@@ -32,7 +32,7 @@ export async function getTenantBySlug(slug: string): Promise<PublicTenant | null
 
   return {
     ...tenant,
-    whatsapp_phone: instance?.phone_number ?? null,
+    whatsapp_phone: instance?.phone_number ?? tenant.whatsapp_phone ?? null,
   }
 }
 

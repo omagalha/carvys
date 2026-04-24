@@ -16,6 +16,7 @@ export type Vehicle = {
   featured: boolean
   cover_image_path: string | null
   gallery: string[]
+  description: string | null
   created_at: string
   // document fields
   renavam: string | null

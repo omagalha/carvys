@@ -17,6 +17,7 @@ const createVehicleSchema = z.object({
   color: z.string().optional(),
   plate: z.string().optional(),
   status: z.enum(['draft', 'available']),
+  description: z.string().optional(),
 })
 
 export type VehicleState = { error: string }
@@ -36,6 +37,7 @@ export async function createVehicle(
     color: formData.get('color') || undefined,
     plate: formData.get('plate') || undefined,
     status: formData.get('status'),
+    description: formData.get('description') || undefined,
   }
 
   const parsed = createVehicleSchema.safeParse(raw)
@@ -47,9 +49,20 @@ export async function createVehicle(
 
   const tenant = memberships[0].tenants as { id: string }
 
+  const vehicleId     = (formData.get('id') as string) || undefined
+  const coverPath     = (formData.get('cover_image_path') as string) || null
+  const galleryRaw    = (formData.get('gallery') as string) || '[]'
+  const gallery       = JSON.parse(galleryRaw) as string[]
+
   const { error } = await supabase
     .from('vehicles')
-    .insert({ ...parsed.data, tenant_id: tenant.id })
+    .insert({
+      ...parsed.data,
+      tenant_id: tenant.id,
+      ...(vehicleId ? { id: vehicleId } : {}),
+      cover_image_path: coverPath,
+      gallery,
+    })
 
   if (error) {
     console.error('[createVehicle]', error.code, error.message)

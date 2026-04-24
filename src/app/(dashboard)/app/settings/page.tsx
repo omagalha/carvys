@@ -15,7 +15,7 @@ export default async function SettingsPage() {
   const memberships = await getUserTenants()
   if (memberships.length === 0) redirect('/onboarding')
 
-  const tenant = memberships[0].tenants as { id: string; name: string; slug: string; status: string }
+  const tenant = memberships[0].tenants as { id: string; name: string; slug: string; status: string; whatsapp_phone: string | null }
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -63,6 +63,7 @@ export default async function SettingsPage() {
           name={tenant.name}
           slug={tenant.slug}
           plan={tenantPlan}
+          whatsappPhone={tenant.whatsapp_phone}
         />
       </section>
 
