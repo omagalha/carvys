@@ -11,22 +11,41 @@ export type Vehicle = {
   color: string | null
   plate: string | null
   price: number
+  cost_price: number | null
   status: 'draft' | 'available' | 'reserved' | 'sold' | 'archived'
   featured: boolean
   cover_image_path: string | null
   gallery: string[]
   created_at: string
+  // document fields
+  renavam: string | null
+  chassis: string | null
+  motor_number: string | null
+  fuel: string | null
+  body_type: string | null
+  transmission: string | null
+  doors: number | null
+  purchase_date: string | null
+  supplier_name: string | null
 }
 
-export async function getVehicles(tenantId: string): Promise<Vehicle[]> {
+export async function getVehicles(
+  tenantId: string,
+  status?: string,
+): Promise<Vehicle[]> {
   const supabase = await createClient()
-  const { data } = await supabase
+  let query = supabase
     .from('vehicles')
-    .select('id, brand, model, version, year_manufacture, year_model, mileage, color, plate, price, status, featured, cover_image_path, created_at')
+    .select('id, brand, model, version, year_manufacture, year_model, mileage, color, plate, price, cost_price, status, featured, cover_image_path, created_at, renavam, chassis, fuel, body_type, transmission, doors')
     .eq('tenant_id', tenantId)
     .neq('status', 'archived')
     .order('created_at', { ascending: false })
 
+  if (status && status !== 'all') {
+    query = query.eq('status', status)
+  }
+
+  const { data } = await query
   return (data as Vehicle[]) ?? []
 }
 

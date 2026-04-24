@@ -5,7 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { loginSchema, signupSchema } from '@/lib/validations/auth'
 
-export type AuthState = { error: string; success?: boolean }
+export type AuthState = { error: string; success?: boolean; userId?: string }
 
 async function upsertProfile(userId: string, fullName?: string | null) {
   const admin = createAdminClient()
@@ -79,9 +79,14 @@ export async function signup(
   formData: FormData
 ): Promise<AuthState> {
   const raw = {
-    full_name: formData.get('full_name') as string,
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
+    full_name:        formData.get('full_name') as string,
+    email:            formData.get('email') as string,
+    password:         formData.get('password') as string,
+    confirm_password: formData.get('confirm_password') as string,
+  }
+
+  if (raw.password !== raw.confirm_password) {
+    return { error: 'As senhas não coincidem.' }
   }
 
   const parsed = signupSchema.safeParse(raw)
@@ -111,6 +116,22 @@ export async function signup(
   if (data.session) {
     redirect('/app/dashboard')
   }
+
+  return { error: '', success: true, userId: data.user?.id }
+}
+
+export async function saveSignupPhone(
+  _state: AuthState,
+  formData: FormData
+): Promise<AuthState> {
+  const userId = formData.get('user_id') as string
+  const phone  = (formData.get('phone') as string)?.trim()
+
+  if (!userId) return { error: 'Sessão inválida.' }
+  if (!phone)  return { error: 'Informe seu telefone.' }
+
+  const admin = createAdminClient()
+  await admin.from('profiles').update({ phone }).eq('id', userId)
 
   return { error: '', success: true }
 }

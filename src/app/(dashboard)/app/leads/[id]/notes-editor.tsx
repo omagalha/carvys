@@ -11,7 +11,7 @@ export function NotesEditor({ leadId, initialNotes }: { leadId: string; initialN
   function handleSave() {
     setSaved(false)
     startTransition(async () => {
-      await updateLeadNotes(leadId, notes)
+      await updateLeadNotes(leadId, notes, !!initialNotes)
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     })

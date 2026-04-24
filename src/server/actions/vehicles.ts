@@ -85,6 +85,49 @@ export async function updateVehiclePhotos(
   return { error: '' }
 }
 
+export type DocState = { error: string; success?: boolean }
+
+export async function updateVehicleDocument(
+  _state: DocState,
+  formData: FormData,
+): Promise<DocState> {
+  const vehicleId = formData.get('vehicle_id') as string
+  if (!vehicleId) return { error: 'ID inválido.' }
+
+  const supabase = await createClient()
+  const memberships = await getUserTenants()
+  if (memberships.length === 0) return { error: 'Sem acesso.' }
+  const tenant = memberships[0].tenants as { id: string }
+
+  const str = (key: string) => (formData.get(key) as string)?.trim() || null
+  const num = (key: string) => { const v = formData.get(key); return v ? Number(v) : null }
+
+  const { error } = await supabase
+    .from('vehicles')
+    .update({
+      renavam:       str('renavam'),
+      chassis:       str('chassis'),
+      motor_number:  str('motor_number'),
+      fuel:          str('fuel'),
+      body_type:     str('body_type'),
+      transmission:  str('transmission'),
+      doors:         num('doors'),
+      purchase_date: str('purchase_date'),
+      supplier_name: str('supplier_name'),
+      cost_price:    num('cost_price'),
+    })
+    .eq('id', vehicleId)
+    .eq('tenant_id', tenant.id)
+
+  if (error) {
+    console.error('[updateVehicleDocument]', error.message)
+    return { error: 'Erro ao salvar. Tente novamente.' }
+  }
+
+  revalidatePath(`/app/vehicles/${vehicleId}`)
+  return { error: '', success: true }
+}
+
 export async function updateVehicleStatus(vehicleId: string, status: string) {
   const supabase = await createClient()
   const memberships = await getUserTenants()

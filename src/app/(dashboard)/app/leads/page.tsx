@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getUserTenants } from '@/server/queries/tenants'
 import { getLeads } from '@/server/queries/leads'
 import type { LeadStage, LeadWithVehicle } from '@/server/queries/leads'
+import { calcTemperature, TEMP_CONFIG } from '@/lib/temperature'
+import { ContactsButton } from './contacts-button'
 
 const STAGES: {
   value: LeadStage
@@ -54,6 +56,8 @@ function LeadCard({ lead, urgencyDays }: { lead: LeadWithVehicle; urgencyDays: n
   const days     = daysSince(ref)
   const waPhone  = lead.phone?.replace(/\D/g, '')
   const initial  = lead.name.charAt(0).toUpperCase()
+  const temp     = calcTemperature(lead.stage, lead.last_contact_at, lead.created_at)
+  const tempCfg  = temp ? TEMP_CONFIG[temp] : null
 
   return (
     <div className={`relative group rounded-xl bg-deep border transition-all duration-200 hover:border-green/30 hover:shadow-lg hover:shadow-green/5 ${
@@ -97,11 +101,16 @@ function LeadCard({ lead, urgencyDays }: { lead: LeadWithVehicle; urgencyDays: n
           )}
         </div>
 
-        {/* Rodapé: fonte + tempo + WhatsApp */}
+        {/* Rodapé: fonte + temperatura + tempo + WhatsApp */}
         <div className="flex items-center gap-2 pt-1 border-t border-surface/60">
           {lead.source && (
             <span className="font-body text-[10px] text-slate bg-surface/60 px-1.5 py-0.5 rounded-full truncate">
               {SOURCE_LABEL[lead.source] ?? lead.source}
+            </span>
+          )}
+          {tempCfg && (
+            <span className={`font-body text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${tempCfg.color} ${tempCfg.bg} ${tempCfg.border} shrink-0`}>
+              {tempCfg.emoji} {tempCfg.label}
             </span>
           )}
           <div className={`flex items-center gap-1 ml-auto font-body text-[10px] shrink-0 ${urgent ? 'text-alert font-semibold' : 'text-slate'}`}>
@@ -245,6 +254,8 @@ export default async function LeadsPage() {
           })}
         </div>
       )}
+
+      <ContactsButton />
     </div>
   )
 }

@@ -196,13 +196,13 @@ export default function HomePage() {
                 </div>
                 <div style={{ fontSize: 13, color: '#444', marginBottom: 20 }}>/mês por concessionária</div>
                 <div style={{ fontSize: 14, color: '#888', marginBottom: 28, lineHeight: 1.6, paddingBottom: 28, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                  A escolha certa para concessionárias que querem crescer com processos profissionais e automação real.
+                  A escolha certa para concessionárias que querem crescer com processos profissionais e seu site no ar.
                 </div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 32 }}>
-                  {['CRM de leads (ilimitado)', 'Funil de vendas avançado', 'Gestão de tarefas + equipes', 'Automações (até 50 fluxos)', 'Controle financeiro completo', 'Relatórios avançados'].map(f => (
+                  {['CRM de leads (ilimitado)', 'Funil de vendas avançado', 'Gestão de tarefas + equipes', 'Controle financeiro completo', 'Relatórios avançados', 'Site padrão com seu estoque', 'Logo personalizada'].map(f => (
                     <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontSize: 14, color: '#888' }}>{CHECK}{f}</li>
                   ))}
-                  {['Suporte prioritário'].map(f => (
+                  {['Domínio próprio', 'Suporte prioritário'].map(f => (
                     <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontSize: 14, color: '#444' }}>{DASH}{f}</li>
                   ))}
                 </ul>
@@ -231,10 +231,10 @@ export default function HomePage() {
                 </div>
                 <div style={{ fontSize: 13, color: '#444', marginBottom: 20 }}>/mês por concessionária</div>
                 <div style={{ fontSize: 14, color: '#888', marginBottom: 28, lineHeight: 1.6, paddingBottom: 28, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                  Para grupos e redes que precisam de controle total, integrações e suporte dedicado.
+                  Para quem quer o máximo: sistema completo, site com sua identidade e domínio próprio.
                 </div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 32 }}>
-                  {['Tudo do plano Pro', 'Automações ilimitadas', 'Multi-unidades / grupos', 'API + integrações avançadas', 'Dashboard executivo', 'Suporte prioritário 24h', 'Onboarding dedicado'].map(f => (
+                  {['Tudo do plano Pro', 'Site premium com cor personalizada', 'Domínio próprio (ex: sualoja.com.br)', 'Automações ilimitadas', 'Multi-unidades / grupos', 'API + integrações avançadas', 'Suporte prioritário 24h', 'Onboarding dedicado'].map(f => (
                     <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontSize: 14, color: '#888' }}>{CHECK}{f}</li>
                   ))}
                 </ul>
@@ -283,6 +283,7 @@ export default function HomePage() {
                     { feature: 'Gestão de equipes', sub: 'Usuários, permissões e metas', starter: '—', pro: '✓', premium: '✓', proTick: true, starterTick: false, premiumTick: true },
                     { feature: 'Multi-unidades', sub: 'Gestão de múltiplas lojas/filiais', starter: '—', pro: '—', premium: '✓', proTick: false, starterTick: false, premiumTick: true },
                     { feature: 'API & integrações', sub: 'WhatsApp, portais, ERPs e mais', starter: '—', pro: '—', premium: '✓', proTick: false, starterTick: false, premiumTick: true },
+                    { feature: 'Site público', sub: 'Vitrine online com seu estoque', starter: '—', pro: '✓ Padrão + logo', premium: '✓ Premium + domínio', proTick: false, starterTick: false, premiumTick: false },
                     { feature: 'Suporte', sub: 'Canal e tempo de resposta', starter: 'Chat + email', pro: 'Chat prioritário', premium: '24h dedicado', proTick: false, starterTick: false, premiumTick: false },
                   ].map((row, i, arr) => (
                     <tr key={row.feature}>

@@ -206,7 +206,7 @@ export default async function FinanceiroPage({
             <span className="font-body text-xs text-slate uppercase tracking-widest">Faturamento</span>
             <ArrowUpRight size={14} className="text-green" />
           </div>
-          <span className="font-display font-bold text-white text-xl leading-none">{fmt(totalRevenue)}</span>
+          <span className="font-display font-bold text-white text-base md:text-xl leading-none">{fmt(totalRevenue)}</span>
           <span className="font-body text-xs text-slate">{sales.length} venda{sales.length !== 1 ? 's' : ''}</span>
         </div>
 
@@ -215,7 +215,7 @@ export default async function FinanceiroPage({
             <span className="font-body text-xs text-slate uppercase tracking-widest">Despesas</span>
             <ArrowDownRight size={14} className="text-alert" />
           </div>
-          <span className="font-display font-bold text-white text-xl leading-none">{fmt(totalExpenses)}</span>
+          <span className="font-display font-bold text-white text-base md:text-xl leading-none">{fmt(totalExpenses)}</span>
           <span className="font-body text-xs text-slate">{expenseEntries.length} lançamento{expenseEntries.length !== 1 ? 's' : ''}</span>
         </div>
 
@@ -224,7 +224,7 @@ export default async function FinanceiroPage({
             <span className="font-body text-xs text-slate uppercase tracking-widest">Lucro</span>
             <TrendingUp size={14} className={netProfit >= 0 ? 'text-green' : 'text-alert'} />
           </div>
-          <span className={`font-display font-bold text-xl leading-none ${netProfit >= 0 ? 'text-green' : 'text-alert'}`}>
+          <span className={`font-display font-bold text-base md:text-xl leading-none ${netProfit >= 0 ? 'text-green' : 'text-alert'}`}>
             {fmt(netProfit)}
           </span>
           <span className="font-body text-xs text-slate">
@@ -237,7 +237,7 @@ export default async function FinanceiroPage({
             <span className="font-body text-xs text-slate uppercase tracking-widest">Caixa</span>
             <Wallet size={14} className="text-slate" />
           </div>
-          <span className={`font-display font-bold text-xl leading-none ${caixa >= 0 ? 'text-white' : 'text-alert'}`}>
+          <span className={`font-display font-bold text-base md:text-xl leading-none ${caixa >= 0 ? 'text-white' : 'text-alert'}`}>
             {fmt(caixa)}
           </span>
           <span className="font-body text-xs text-slate">entradas − despesas</span>

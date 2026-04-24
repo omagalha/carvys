@@ -240,16 +240,16 @@ export default async function DashboardPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-2 rounded-xl bg-deep border border-surface p-5">
+            <div className="flex flex-col gap-2 rounded-xl bg-deep border border-surface p-4">
               <span className="font-body text-xs text-slate uppercase tracking-widest">Faturamento</span>
-              <span className="font-display font-black text-white text-2xl leading-none">{fmt(revenue)}</span>
+              <span className="font-display font-black text-white text-lg md:text-2xl leading-none">{fmt(revenue)}</span>
               <span className="font-body text-xs text-slate">
                 {soldCount === 0 ? 'Nenhuma venda ainda' : `${soldCount} venda${soldCount !== 1 ? 's' : ''} este mês`}
               </span>
             </div>
-            <div className="flex flex-col gap-2 rounded-xl bg-deep border border-surface p-5">
+            <div className="flex flex-col gap-2 rounded-xl bg-deep border border-surface p-4">
               <span className="font-body text-xs text-slate uppercase tracking-widest">Lucro</span>
-              <span className={`font-display font-black text-2xl leading-none ${profit > 0 ? 'text-green' : profit < 0 ? 'text-alert' : 'text-white'}`}>
+              <span className={`font-display font-black text-lg md:text-2xl leading-none ${profit > 0 ? 'text-green' : profit < 0 ? 'text-alert' : 'text-white'}`}>
                 {fmt(profit)}
               </span>
               <span className="font-body text-xs text-slate">{revenue > 0 ? `${margin}% de margem` : 'sem vendas ainda'}</span>

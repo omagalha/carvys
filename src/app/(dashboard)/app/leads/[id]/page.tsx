@@ -9,6 +9,9 @@ import type { FollowUp } from '@/server/queries/follow-ups'
 import { StageSelect } from './stage-select'
 import { NotesEditor } from './notes-editor'
 import { WATemplates } from './wa-templates'
+import { Timeline } from './timeline'
+import { calcTemperature, TEMP_CONFIG } from '@/lib/temperature'
+import { getLeadEvents } from '@/server/queries/lead-events'
 
 const SOURCE_LABEL: Record<string, string> = {
   instagram: 'Instagram',
@@ -47,11 +50,15 @@ export default async function LeadDetailPage({
   if (memberships.length === 0) redirect('/onboarding')
 
   const tenant = memberships[0].tenants as { id: string }
-  const [lead, followUps] = await Promise.all([
+  const [lead, followUps, events] = await Promise.all([
     getLead(id, tenant.id),
     getLeadFollowUps(id, tenant.id),
+    getLeadEvents(id, tenant.id),
   ])
   if (!lead) notFound()
+
+  const temp    = calcTemperature(lead.stage, lead.last_contact_at, lead.created_at)
+  const tempCfg = temp ? TEMP_CONFIG[temp] : null
 
   const CHANNEL_ICON: Record<string, React.ElementType> = {
     whatsapp: WA, phone: PhoneCall, email: Mail, visit: MapPin, outro: Calendar,
@@ -74,7 +81,14 @@ export default async function LeadDetailPage({
           <ArrowLeft size={16} className="text-slate" />
         </Link>
         <div className="flex-1 min-w-0">
-          <h1 className="font-display font-bold text-white text-xl truncate">{lead.name}</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="font-display font-bold text-white text-xl truncate">{lead.name}</h1>
+            {tempCfg && (
+              <span className={`inline-flex items-center gap-1 font-body text-xs font-medium px-2 py-0.5 rounded-full border ${tempCfg.color} ${tempCfg.bg} ${tempCfg.border}`}>
+                {tempCfg.emoji} {tempCfg.label}
+              </span>
+            )}
+          </div>
           <p className="font-body text-xs text-slate mt-0.5">Desde {formatDate(lead.created_at)}</p>
         </div>
       </div>
@@ -153,6 +167,9 @@ export default async function LeadDetailPage({
         <h2 className="font-body font-semibold text-white text-sm">Notas</h2>
         <NotesEditor leadId={lead.id} initialNotes={lead.notes} />
       </section>
+
+      {/* Timeline */}
+      <Timeline events={events} followUps={followUps} leadCreatedAt={lead.created_at} />
 
       {/* Follow-ups */}
       <section className="flex flex-col gap-3 rounded-xl bg-deep border border-surface p-5">
