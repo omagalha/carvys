@@ -1,9 +1,9 @@
 'use client'
 
 import { useActionState, useEffect, useState } from 'react'
-import { subscribePlan } from '@/server/actions/billing'
+import { subscribePlan, type BillingState } from '@/server/actions/billing'
 
-const initialState = { error: '' }
+const initialState: BillingState = { error: '' }
 
 interface Props {
   planCode: string

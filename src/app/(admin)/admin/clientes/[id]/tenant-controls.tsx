@@ -35,7 +35,7 @@ export function TenantControls({ tenantId, currentStatus, currentPlan }: Props) 
           <select
             defaultValue={currentStatus}
             disabled={pendingStatus}
-            onChange={e => startStatus(() => updateTenantStatus(tenantId, e.target.value))}
+            onChange={e => startStatus(async () => { await updateTenantStatus(tenantId, e.target.value) })}
             className="h-10 flex-1 rounded-lg border border-surface bg-void px-3 font-body text-sm text-white focus:outline-none focus:border-green transition-colors disabled:opacity-50"
           >
             {STATUSES.map(s => (
@@ -52,7 +52,7 @@ export function TenantControls({ tenantId, currentStatus, currentPlan }: Props) 
           <select
             defaultValue={currentPlan}
             disabled={pendingPlan}
-            onChange={e => startPlan(() => updateTenantPlan(tenantId, e.target.value))}
+            onChange={e => startPlan(async () => { await updateTenantPlan(tenantId, e.target.value) })}
             className="h-10 flex-1 rounded-lg border border-surface bg-void px-3 font-body text-sm text-white focus:outline-none focus:border-green transition-colors disabled:opacity-50"
           >
             {PLANS.map(p => (
