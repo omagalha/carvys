@@ -18,13 +18,38 @@ export async function createPublicLead(
   if (!phone || phone.replace(/\D/g, '').length < 10)
     return { error: 'WhatsApp inválido.', success: false }
 
+  const normalizedPhone = phone.replace(/\D/g, '')
   const admin = createAdminClient()
+
+  const { data: existing } = await admin
+    .from('leads')
+    .select('id')
+    .eq('tenant_id', tenantId)
+    .eq('phone', normalizedPhone)
+    .limit(1)
+    .maybeSingle()
+
+  if (existing) {
+    if (vehicleId) {
+      await admin.from('lead_events').insert({
+        tenant_id:   tenantId,
+        lead_id:     existing.id,
+        type:        'note',
+        description: 'Novo interesse via site',
+      })
+      await admin.from('leads')
+        .update({ interest_vehicle_id: vehicleId, stage: 'new', updated_at: new Date().toISOString() })
+        .eq('id', existing.id)
+    }
+    return { error: '', success: true }
+  }
+
   const { error } = await admin.from('leads').insert({
-    tenant_id: tenantId,
+    tenant_id:           tenantId,
     name,
-    phone,
-    stage: 'new',
-    source: 'site',
+    phone:               normalizedPhone,
+    stage:               'new',
+    source:              'site',
     ...(vehicleId ? { interest_vehicle_id: vehicleId } : {}),
   })
 

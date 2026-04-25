@@ -8,7 +8,10 @@
       "Bash(node -e \"console.log\\(require\\('./node_modules/@tailwindcss/postcss/package.json'\\).version\\)\")",
       "Bash(node -e \"console.log\\(require\\('./node_modules/tailwindcss/package.json'\\).version\\)\")",
       "Bash(node -e ' *)",
-      "Bash(find \"c:\\\\\\\\Users\\\\\\\\Thales Magalhães\\\\\\\\OneDrive\\\\\\\\Desktop\\\\\\\\carvys\\\\\\\\Carvys\\\\\\\\src\\\\\\\\app\\\\\\\\\\(dashboard\\)\\\\\\\\app\\\\\\\\financeiro\" -type f -name \"*.tsx\" -o -name \"*.ts\")"
+      "Bash(find \"c:\\\\\\\\Users\\\\\\\\Thales Magalhães\\\\\\\\OneDrive\\\\\\\\Desktop\\\\\\\\carvys\\\\\\\\Carvys\\\\\\\\src\\\\\\\\app\\\\\\\\\\(dashboard\\)\\\\\\\\app\\\\\\\\financeiro\" -type f -name \"*.tsx\" -o -name \"*.ts\")",
+      "Bash(npx supabase *)",
+      "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(32\\).toString\\('hex'\\)\\)\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" -X POST https://www.carvys.com.br/api/webhooks/asaas -H \"Content-Type: application/json\" -H \"asaas-access-token: cac4f1f2faf628cbf35d029f4d8e62a2396d3c6658ecf4e8f0dec8f790422696\" -d '{\"event\":\"TEST\"}')"
     ]
   }
 }
