@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { CheckCircle, XCircle } from 'lucide-react'
 import { Logo } from '@/components/shared/logo'
