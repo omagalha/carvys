@@ -17,7 +17,20 @@
       "Bash(git -C \"c:\\\\Users\\\\Thales Magalhães\\\\OneDrive\\\\Desktop\\\\carvys\\\\Carvys\" status -- \"supabase/migrations/*.sql\")",
       "Bash(git -C \"c:\\\\Users\\\\Thales Magalhães\\\\OneDrive\\\\Desktop\\\\carvys\\\\Carvys\" diff -- \"supabase/migrations/\")",
       "Bash(node_modules/.bin/tsc --noEmit)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git push *)",
+      "Bash(node -e \"const r = require\\('c:/Users/Thales Magalhães/OneDrive/Desktop/carvys/Carvys/node_modules/react/package.json'\\); console.log\\(r.version, r.types, r.typings\\)\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('version:', d.get\\('version'\\)\\); print\\('types:', d.get\\('types', d.get\\('typings', 'none'\\)\\)\\)\")",
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('c:/Users/Thales Magalhães/OneDrive/Desktop/carvys/Carvys/package.json'\\)\\); print\\(json.dumps\\({**d.get\\('dependencies',{}\\), **d.get\\('devDependencies',{}\\)}, indent=2\\)\\)\")",
+      "Read(//c/Users/Thales Magalh�es/OneDrive/Desktop/carvys/**)",
+      "PowerShell($nm = Get-Item \"c:\\\\Users\\\\Thales Magalhães\\\\OneDrive\\\\Desktop\\\\carvys\\\\Carvys\\\\node_modules\" -ErrorAction SilentlyContinue; Write-Output \"Target: $\\($nm.Target\\)\"; Write-Output \"LinkType: $\\($nm.LinkType\\)\"; \\(Get-ChildItem \"c:\\\\Users\\\\Thales Magalhães\\\\OneDrive\\\\Desktop\\\\carvys\\\\Carvys\\\\node_modules\" -Directory\\).Count)",
+      "PowerShell($dir = Get-Item \"c:\\\\Users\\\\Thales Magalhães\\\\OneDrive\\\\Desktop\\\\carvys\\\\Carvys\\\\node_modules\\\\@types\" -Force; Write-Output \"Attributes: $\\($dir.Attributes\\)\"; Write-Output \"LinkType: $\\($dir.LinkType\\)\"; Write-Output \"Target: $\\($dir.Target\\)\")",
+      "PowerShell(cmd /c \"dir /b `\"c:\\\\Users\\\\Thales Magalh�es\\\\OneDrive\\\\Desktop\\\\carvys\\\\Carvys\\\\node_modules\\\\@types`\" 2>&1\")",
+      "PowerShell(cmd /c \"cd `\"c:\\\\Users\\\\Thales Magalh�es\\\\OneDrive\\\\Desktop\\\\carvys\\\\Carvys`\" && npm install @types/react@19.2.14 --verbose 2>&1\")",
+      "PowerShell(cmd /c \"dir /b `\"c:\\\\Users\\\\Thales Magalh�es\\\\OneDrive\\\\Desktop\\\\carvys\\\\Carvys\\\\node_modules\\\\@types`\"\")",
+      "PowerShell(cmd /c \"type `\"c:\\\\Users\\\\Thales Magalh�es\\\\OneDrive\\\\Desktop\\\\carvys\\\\Carvys\\\\.npmrc`\" 2>&1\")",
+      "PowerShell(cmd /c \"npm config get omit\")",
+      "PowerShell(cmd /c \"cd `\"c:\\\\Users\\\\Thales Magalh�es\\\\OneDrive\\\\Desktop\\\\carvys\\\\Carvys`\" && npm install --include=dev 2>&1\")"
     ]
   }
 }
