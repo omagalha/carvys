@@ -1,39 +1,11 @@
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
-import Link from 'next/link'
-import { CheckCircle, XCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { Logo } from '@/components/shared/logo'
+import { InvitePage } from './invite-ui'
 
 interface Props {
   searchParams: Promise<{ token?: string }>
-}
-
-function InvitePage({ title, message, isError = false }: { title: string; message: string; isError?: boolean }) {
-  return (
-    <div className="min-h-screen bg-dark flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col gap-6 rounded-2xl bg-deep border border-surface p-8 text-center">
-          <Logo size="md" />
-          <div className="flex flex-col items-center gap-3">
-            {isError
-              ? <XCircle size={40} className="text-alert" />
-              : <CheckCircle size={40} className="text-green" />
-            }
-            <h1 className="font-display font-bold text-white text-xl">{title}</h1>
-            <p className="font-body text-sm text-slate">{message}</p>
-          </div>
-          <Link
-            href="/app/dashboard"
-            className="inline-block bg-green text-dark font-body font-semibold text-sm px-6 py-3 rounded-lg"
-          >
-            Ir para o painel
-          </Link>
-        </div>
-      </div>
-    </div>
-  )
 }
 
 export default async function AcceptInvitePage({ searchParams }: Props) {
@@ -59,14 +31,12 @@ export default async function AcceptInvitePage({ searchParams }: Props) {
     return <InvitePage isError title="Convite expirado" message="Este convite expirou. Peça ao responsável da loja para enviar um novo convite." />
   }
 
-  const tenantName = (invite.tenants as { name: string } | null)?.name ?? 'a loja'
+  const tenantName = (invite.tenants as unknown as { name: string } | null)?.name ?? 'a loja'
 
-  // Check if user is logged in
-  const supabase  = await createClient()
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    // Save return URL in cookie and redirect to login
     const cookieStore = await cookies()
     cookieStore.set('invite_return', `/aceitar-convite?token=${token}`, {
       httpOnly: true,
@@ -87,7 +57,6 @@ export default async function AcceptInvitePage({ searchParams }: Props) {
     )
   }
 
-  // Accept the invite
   const { error: memberError } = await admin.from('tenant_memberships').insert({
     tenant_id:           invite.tenant_id,
     user_id:             user.id,
@@ -96,7 +65,6 @@ export default async function AcceptInvitePage({ searchParams }: Props) {
     can_view_financials: invite.can_view_financials,
   })
 
-  // Ignore duplicate membership error (idempotent)
   if (memberError && memberError.code !== '23505') {
     console.error('[acceptInvite]', memberError.message)
     return <InvitePage isError title="Erro ao aceitar convite" message="Tente novamente ou entre em contato com o suporte." />
