@@ -4,16 +4,22 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LayoutDashboard, Car, Users, Bell, TrendingUp } from 'lucide-react'
 
-const items = [
-  { href: '/app/dashboard',   label: 'Dashboard',   icon: LayoutDashboard },
-  { href: '/app/vehicles',    label: 'Estoque',     icon: Car },
-  { href: '/app/leads',       label: 'Leads',       icon: Users },
-  { href: '/app/follow-ups',  label: 'Tarefas',     icon: Bell },
-  { href: '/app/financeiro',  label: 'Financeiro',  icon: TrendingUp },
+const BASE_ITEMS = [
+  { href: '/app/dashboard',  label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/app/vehicles',   label: 'Estoque',   icon: Car },
+  { href: '/app/leads',      label: 'Leads',     icon: Users },
+  { href: '/app/follow-ups', label: 'Tarefas',   icon: Bell },
 ]
 
-export function BottomNav() {
+const FINANCIAL_ITEM = { href: '/app/financeiro', label: 'Financeiro', icon: TrendingUp }
+
+interface Props {
+  canViewFinancials: boolean
+}
+
+export function BottomNav({ canViewFinancials }: Props) {
   const pathname = usePathname()
+  const items = canViewFinancials ? [...BASE_ITEMS, FINANCIAL_ITEM] : BASE_ITEMS
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-deep border-t border-surface md:hidden">

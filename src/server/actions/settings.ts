@@ -15,6 +15,13 @@ const tenantSchema = z.object({
   whatsapp_phone: z.string().optional(),
 })
 
+const storeInfoSchema = z.object({
+  contact_email:  z.string().email('E-mail inválido').optional().or(z.literal('')),
+  contact_phone:  z.string().optional(),
+  address:        z.string().optional(),
+  business_hours: z.string().optional(),
+})
+
 export type SettingsState = { error: string; success?: boolean }
 
 export async function updateProfile(
@@ -83,5 +90,44 @@ export async function updateTenant(
 
   revalidatePath('/app/settings')
   revalidatePath('/app/dashboard')
+  return { error: '', success: true }
+}
+
+export async function updateStoreInfo(
+  _state: SettingsState,
+  formData: FormData
+): Promise<SettingsState> {
+  const raw = {
+    contact_email:  formData.get('contact_email')  || undefined,
+    contact_phone:  formData.get('contact_phone')  || undefined,
+    address:        formData.get('address')        || undefined,
+    business_hours: formData.get('business_hours') || undefined,
+  }
+
+  const parsed = storeInfoSchema.safeParse(raw)
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+  const memberships = await getUserTenants()
+  if (memberships.length === 0) return { error: 'Nenhuma loja encontrada.' }
+
+  const tenant = memberships[0].tenants as { id: string }
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('tenants')
+    .update({
+      contact_email:  parsed.data.contact_email  ?? null,
+      contact_phone:  parsed.data.contact_phone  ?? null,
+      address:        parsed.data.address        ?? null,
+      business_hours: parsed.data.business_hours ?? null,
+    })
+    .eq('id', tenant.id)
+
+  if (error) {
+    console.error('[updateStoreInfo]', error.message)
+    return { error: 'Erro ao salvar informações da loja.' }
+  }
+
+  revalidatePath('/app/settings')
   return { error: '', success: true }
 }

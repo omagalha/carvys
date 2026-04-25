@@ -4,24 +4,27 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LayoutDashboard, Car, Users, Bell, TrendingUp, Settings, ExternalLink } from 'lucide-react'
 
-const navItems = [
-  { href: '/app/dashboard',   label: 'Dashboard',   icon: LayoutDashboard },
-  { href: '/app/vehicles',    label: 'Estoque',     icon: Car },
-  { href: '/app/leads',       label: 'Leads',       icon: Users },
-  { href: '/app/follow-ups',  label: 'Tarefas',     icon: Bell },
-  { href: '/app/financeiro',  label: 'Financeiro',  icon: TrendingUp },
+const BASE_NAV = [
+  { href: '/app/dashboard',  label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/app/vehicles',   label: 'Estoque',   icon: Car },
+  { href: '/app/leads',      label: 'Leads',     icon: Users },
+  { href: '/app/follow-ups', label: 'Tarefas',   icon: Bell },
 ]
+
+const FINANCIAL_NAV = { href: '/app/financeiro', label: 'Financeiro', icon: TrendingUp }
 
 const PLANS_WITH_SITE = ['trial', 'pro', 'elite']
 
 interface Props {
-  slug: string
-  plan: string
+  slug:               string
+  plan:               string
+  canViewFinancials:  boolean
 }
 
-export function Sidebar({ slug, plan }: Props) {
+export function Sidebar({ slug, plan, canViewFinancials }: Props) {
   const pathname = usePathname()
-  const hasSite = PLANS_WITH_SITE.includes(plan)
+  const hasSite  = PLANS_WITH_SITE.includes(plan)
+  const navItems = canViewFinancials ? [...BASE_NAV, FINANCIAL_NAV] : BASE_NAV
 
   return (
     <aside className="hidden md:flex flex-col w-56 shrink-0 border-r border-surface bg-deep h-full">

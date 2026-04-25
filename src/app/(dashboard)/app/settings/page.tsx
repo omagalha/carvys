@@ -1,11 +1,14 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { User, Store, LogOut, CreditCard, ArrowRight } from 'lucide-react'
+import { User, Store, Globe, LogOut, CreditCard, ArrowRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getUserTenants } from '@/server/queries/tenants'
 import { logout } from '@/server/actions/auth'
 import { ProfileForm } from './profile-form'
 import { TenantForm } from './tenant-form'
+import { StoreInfoForm } from './store-info-form'
+import { TeamSection, type TeamMember, type PendingInvite } from './team-section'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -15,7 +18,7 @@ export default async function SettingsPage() {
   const memberships = await getUserTenants()
   if (memberships.length === 0) redirect('/onboarding')
 
-  const tenant = memberships[0].tenants as { id: string; name: string; slug: string; status: string; whatsapp_phone: string | null }
+  const tenant = memberships[0].tenants
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -23,7 +26,45 @@ export default async function SettingsPage() {
     .eq('id', user.id)
     .single()
 
-  const tenantPlan = (memberships[0].tenants as { plan_code?: string }).plan_code ?? 'trial'
+  const tenantPlan = tenant.plan_code ?? 'trial'
+
+  // Fetch team members
+  const admin = createAdminClient()
+  const { data: membershipRows } = await admin
+    .from('tenant_memberships')
+    .select('id, user_id, role, can_view_financials')
+    .eq('tenant_id', tenant.id)
+    .eq('status', 'active')
+    .order('created_at')
+
+  const teamMembers: TeamMember[] = await Promise.all(
+    (membershipRows ?? []).map(async (m) => {
+      const { data: { user: authUser } } = await admin.auth.admin.getUserById(m.user_id)
+      const { data: p } = await admin.from('profiles').select('full_name').eq('id', m.user_id).single()
+      return {
+        id:                m.id,
+        userId:            m.user_id,
+        email:             authUser?.email ?? '—',
+        name:              p?.full_name ?? null,
+        role:              m.role,
+        canViewFinancials: m.can_view_financials ?? false,
+      }
+    })
+  )
+
+  const { data: inviteRows } = await admin
+    .from('team_invites')
+    .select('id, email, role, expires_at')
+    .eq('tenant_id', tenant.id)
+    .is('accepted_at', null)
+    .gte('expires_at', new Date().toISOString())
+
+  const pendingInvites: PendingInvite[] = (inviteRows ?? []).map(i => ({
+    id:        i.id,
+    email:     i.email,
+    role:      i.role,
+    expiresAt: i.expires_at,
+  }))
 
   return (
     <div className="p-4 md:p-6 flex flex-col gap-6 max-w-2xl">
@@ -64,6 +105,32 @@ export default async function SettingsPage() {
           slug={tenant.slug}
           plan={tenantPlan}
           whatsappPhone={tenant.whatsapp_phone}
+        />
+      </section>
+
+      {/* Equipe */}
+      <TeamSection
+        members={teamMembers}
+        pendingInvites={pendingInvites}
+        planCode={tenantPlan}
+        currentUserId={user.id}
+      />
+
+      {/* Site da loja */}
+      <section className="flex flex-col gap-4 rounded-xl bg-deep border border-surface p-5">
+        <div className="flex items-center gap-2">
+          <Globe size={16} className="text-green" />
+          <h2 className="font-body font-semibold text-white text-sm">Informações do site</h2>
+        </div>
+        <p className="font-body text-xs text-slate -mt-2">
+          Aparecem no seu site público em carvys.com.br/loja/{tenant.slug}
+        </p>
+
+        <StoreInfoForm
+          contactEmail={tenant.contact_email}
+          contactPhone={tenant.contact_phone}
+          address={tenant.address}
+          businessHours={tenant.business_hours}
         />
       </section>
 

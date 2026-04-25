@@ -2,8 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import type { TenantRole, MembershipStatus, TenantStatus } from '@/types/database'
 
 export type MembershipWithTenant = {
-  role: TenantRole
-  status: MembershipStatus
+  role:               TenantRole
+  status:             MembershipStatus
+  can_view_financials: boolean
   tenants: {
     id: string
     name: string
@@ -11,6 +12,10 @@ export type MembershipWithTenant = {
     plan_code: string
     status: TenantStatus
     whatsapp_phone: string | null
+    contact_email:  string | null
+    contact_phone:  string | null
+    address:        string | null
+    business_hours: string | null
   }
 }
 
@@ -21,7 +26,7 @@ export async function getUserTenants(): Promise<MembershipWithTenant[]> {
 
   const { data: memberships, error: membershipsError } = await supabase
     .from('tenant_memberships')
-    .select('tenant_id, role, status')
+    .select('tenant_id, role, status, can_view_financials')
     .eq('user_id', user.id)
     .eq('status', 'active')
 
@@ -40,7 +45,7 @@ export async function getUserTenants(): Promise<MembershipWithTenant[]> {
 
   const { data: tenants, error: tenantsError } = await supabase
     .from('tenants')
-    .select('id, name, slug, plan_code, status, whatsapp_phone')
+    .select('id, name, slug, plan_code, status, whatsapp_phone, contact_email, contact_phone, address, business_hours')
     .in('id', tenantIds)
 
   if (tenantsError) {
@@ -58,9 +63,10 @@ export async function getUserTenants(): Promise<MembershipWithTenant[]> {
       if (!tenant) return null
 
       return {
-        role: membership.role,
-        status: membership.status,
-        tenants: tenant,
+        role:                membership.role,
+        status:              membership.status,
+        can_view_financials: membership.can_view_financials ?? false,
+        tenants:             tenant,
       }
     })
     .filter((membership): membership is MembershipWithTenant => Boolean(membership))

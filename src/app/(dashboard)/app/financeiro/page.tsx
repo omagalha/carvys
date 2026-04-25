@@ -52,6 +52,7 @@ export default async function FinanceiroPage({
 
   const memberships = await getUserTenants()
   if (memberships.length === 0) redirect('/onboarding')
+  if (!memberships[0].can_view_financials) redirect('/app/dashboard')
 
   const tenant = memberships[0].tenants as { id: string }
 

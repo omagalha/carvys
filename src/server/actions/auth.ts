@@ -1,6 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { loginSchema, signupSchema } from '@/lib/validations/auth'
@@ -69,6 +70,13 @@ export async function login(
         ? user.user_metadata.full_name
         : null
     )
+  }
+
+  const cookieStore = await cookies()
+  const returnTo = cookieStore.get('invite_return')?.value
+  if (returnTo) {
+    cookieStore.delete('invite_return')
+    redirect(returnTo)
   }
 
   redirect('/app/dashboard')
