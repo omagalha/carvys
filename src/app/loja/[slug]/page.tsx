@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { Car, MessageCircle, ChevronDown } from 'lucide-react'
 import { getTenantBySlug, getPublicVehicles } from '@/server/queries/public'
 import { LeadModal } from '@/app/loja/_components/lead-modal'
+import { ContactSection } from '@/app/loja/_components/contact-section'
 import type { Vehicle } from '@/server/queries/vehicles'
 
 const PLANS_WITH_SITE = ['trial', 'pro', 'elite']
@@ -290,6 +291,17 @@ export default async function LojaPage({
           )}
         </section>
       )}
+
+      {/* ── Contato & Localização ──────────────────────────────────────── */}
+      <section className="max-w-6xl mx-auto px-4 pb-20">
+        <ContactSection
+          tenantName={tenant.name}
+          contactEmail={tenant.contact_email}
+          contactPhone={tenant.contact_phone}
+          address={tenant.address}
+          businessHours={tenant.business_hours}
+        />
+      </section>
 
       {/* ── Footer ─────────────────────────────────────────────────────── */}
       <footer className="border-t border-white/5">

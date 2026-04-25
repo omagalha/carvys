@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
-import { ArrowLeft, Car, Calendar, Gauge, Fuel, Settings2, Palette, DoorOpen } from 'lucide-react'
+import { ArrowLeft, MessageCircle } from 'lucide-react'
 import { getTenantBySlug, getPublicVehicle } from '@/server/queries/public'
 import { LeadModal } from '@/app/loja/_components/lead-modal'
+import { GalleryViewer } from '@/app/loja/_components/gallery-viewer'
+import { ContactSection } from '@/app/loja/_components/contact-section'
 import type { Vehicle } from '@/server/queries/vehicles'
 
 const PLANS_WITH_SITE = ['trial', 'pro', 'elite']
@@ -19,6 +20,13 @@ function fmtKm(value: number | null) {
 
 function imageUrl(path: string) {
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/vehicles/${path}`
+}
+
+function waLink(phone: string | null, message?: string) {
+  if (!phone) return null
+  const cleaned = phone.replace(/\D/g, '')
+  const text = message ? encodeURIComponent(message) : ''
+  return `https://wa.me/${cleaned}${text ? `?text=${text}` : ''}`
 }
 
 const FUEL_LABEL: Record<string, string> = {
@@ -81,136 +89,167 @@ export default async function VehiclePublicPage({
   const allImages = [
     ...(vehicle.cover_image_path ? [vehicle.cover_image_path] : []),
     ...vehicle.gallery.filter(p => p !== vehicle.cover_image_path),
-  ]
+  ].map(imageUrl)
 
   const vehicleName = `${vehicle.brand} ${vehicle.model}${vehicle.year_model ? ' ' + vehicle.year_model : ''}${vehicle.version ? ' ' + vehicle.version : ''}`
   const description = vehicle.description || generateDescription(vehicle)
 
-  const highlights = [
-    vehicle.year_model                ? { icon: Calendar,  label: 'Ano modelo',      value: String(vehicle.year_model) } : null,
-    vehicle.mileage !== null          ? { icon: Gauge,     label: 'Quilometragem',   value: fmtKm(vehicle.mileage) } : null,
-    vehicle.fuel                      ? { icon: Fuel,      label: 'Combustível',     value: FUEL_LABEL[vehicle.fuel] ?? vehicle.fuel } : null,
-    vehicle.transmission              ? { icon: Settings2, label: 'Câmbio',          value: TRANS_LABEL[vehicle.transmission] ?? vehicle.transmission } : null,
-    vehicle.body_type                 ? { icon: Car,       label: 'Carroceria',      value: BODY_LABEL[vehicle.body_type] ?? vehicle.body_type } : null,
-    vehicle.color                     ? { icon: Palette,   label: 'Cor',             value: vehicle.color } : null,
-    vehicle.doors                     ? { icon: DoorOpen,  label: 'Portas',          value: `${vehicle.doors} portas` } : null,
-  ].filter((h): h is NonNullable<typeof h> => Boolean(h))
+  const specs = [
+    vehicle.year_model                ? { label: 'Ano',           value: String(vehicle.year_model) } : null,
+    vehicle.mileage !== null          ? { label: 'Quilometragem', value: fmtKm(vehicle.mileage) } : null,
+    vehicle.fuel                      ? { label: 'Combustível',   value: FUEL_LABEL[vehicle.fuel] ?? vehicle.fuel } : null,
+    vehicle.transmission              ? { label: 'Câmbio',        value: TRANS_LABEL[vehicle.transmission] ?? vehicle.transmission } : null,
+    vehicle.body_type                 ? { label: 'Carroceria',    value: BODY_LABEL[vehicle.body_type] ?? vehicle.body_type } : null,
+    vehicle.color                     ? { label: 'Cor',           value: vehicle.color } : null,
+    vehicle.doors                     ? { label: 'Portas',        value: `${vehicle.doors} portas` } : null,
+  ].filter((s): s is NonNullable<typeof s> => Boolean(s))
+
+  const waVehicle = waLink(
+    tenant.whatsapp_phone,
+    `Olá! Tenho interesse no ${vehicleName} — ${fmt(vehicle.price)}.`
+  )
+
+  const initial = tenant.name.charAt(0).toUpperCase()
 
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-white">
 
       {/* Header */}
       <header className="border-b border-white/5 bg-[#0A0A0F]/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">
-          <Link
-            href={`/loja/${slug}`}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 hover:border-white/20 transition-colors shrink-0"
-          >
-            <ArrowLeft size={15} className="text-white/60" />
-          </Link>
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#C8F135] shrink-0">
-              <span className="font-display font-bold text-[#0A0A0F] text-[10px] leading-none">
-                {tenant.name.charAt(0).toUpperCase()}
-              </span>
+        <div className="max-w-[1100px] mx-auto px-4 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link
+              href={`/loja/${slug}`}
+              className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-white/10 hover:border-white/20 transition-colors text-white/50 hover:text-white/70"
+            >
+              <ArrowLeft size={14} />
+              <span className="font-body text-xs">Voltar</span>
+            </Link>
+            <div className="h-4 w-px bg-white/10" />
+            <div className="flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#C8F135] shrink-0">
+                <span className="font-display font-bold text-[#0A0A0F] text-[10px] leading-none">{initial}</span>
+              </div>
+              <span className="font-body text-xs text-white/50 hidden sm:block">{tenant.name}</span>
             </div>
-            <span className="font-body text-xs text-white/60 truncate">{tenant.name}</span>
           </div>
+          {waVehicle && (
+            <a
+              href={waVehicle}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#C8F135] text-[#0A0A0F] font-body font-semibold text-xs hover:opacity-90 transition-opacity"
+            >
+              <MessageCircle size={12} />
+              WhatsApp
+            </a>
+          )}
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-6 flex flex-col gap-6">
+      <main className="max-w-[1100px] mx-auto px-4 py-8 flex flex-col gap-8">
 
-        {/* Fotos */}
-        <div className="flex flex-col gap-2">
-          <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-white/5">
-            {allImages[0] ? (
-              <Image
-                src={imageUrl(allImages[0])}
-                alt={vehicleName}
-                fill
-                className="object-cover"
-                priority
-                sizes="(max-width: 768px) 100vw, 768px"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center">
-                <Car size={48} className="text-white/10" />
+        {/* Título */}
+        <div>
+          <p className="font-body text-xs text-white/25 mb-2">{tenant.name} · Estoque · {vehicle.brand}</p>
+          <h1 className="font-display font-bold text-white text-3xl leading-tight">{vehicle.brand} {vehicle.model}</h1>
+          {(vehicle.version || vehicle.year_model) && (
+            <p className="font-body text-white/40 mt-1">
+              {[vehicle.version, vehicle.year_model].filter(Boolean).join(' · ')}
+            </p>
+          )}
+        </div>
+
+        {/* Layout 2 colunas */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10 items-start">
+
+          {/* Coluna esquerda */}
+          <div className="flex flex-col gap-8 order-2 lg:order-1">
+            <GalleryViewer images={allImages} vehicleName={vehicleName} />
+
+            {description && (
+              <div className="flex flex-col gap-3">
+                <p className="font-body text-[10px] text-white/25 uppercase tracking-widest border-b border-white/5 pb-3">Descrição</p>
+                <p className="font-body text-sm text-white/50 leading-relaxed">{description}</p>
+              </div>
+            )}
+
+            {specs.length > 0 && (
+              <div className="flex flex-col gap-3">
+                <p className="font-body text-[10px] text-white/25 uppercase tracking-widest border-b border-white/5 pb-3">Ficha técnica</p>
+                <div className="grid grid-cols-2 gap-px bg-white/5 rounded-2xl overflow-hidden">
+                  {specs.map(({ label, value }) => (
+                    <div key={label} className="bg-[#0A0A0F] px-4 py-4">
+                      <p className="font-body text-[10px] text-white/25 uppercase tracking-wider mb-1.5">{label}</p>
+                      <p className="font-body text-sm font-semibold text-white">{value}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
 
-          {allImages.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-0.5">
-              {allImages.slice(1).map((path, i) => (
-                <div key={i} className="relative h-16 w-24 shrink-0 rounded-lg overflow-hidden bg-white/5">
-                  <Image src={imageUrl(path)} alt={`Foto ${i + 2}`} fill className="object-cover" sizes="96px" />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Título + preço */}
-        <div className="flex flex-col gap-1">
-          <h1 className="font-display font-bold text-white text-2xl leading-tight">
-            {vehicle.brand} {vehicle.model}
-          </h1>
-          {vehicle.version && (
-            <p className="font-body text-sm text-white/40">{vehicle.version}</p>
-          )}
-          <p className="font-display font-bold text-[#C8F135] text-3xl mt-3">{fmt(vehicle.price)}</p>
-        </div>
-
-        {/* Descrição */}
-        {description && (
-          <p className="font-body text-sm text-white/50 leading-relaxed">
-            {description}
-          </p>
-        )}
-
-        {/* Highlights verticais */}
-        {highlights.length > 0 && (
-          <div className="flex flex-col rounded-2xl border border-white/5 overflow-hidden">
-            {highlights.map(({ icon: Icon, label, value }, i) => (
-              <div
-                key={label}
-                className={[
-                  'flex items-center justify-between px-4 py-3.5',
-                  i < highlights.length - 1 ? 'border-b border-white/5' : '',
-                ].join(' ')}
-              >
-                <div className="flex items-center gap-3">
-                  <Icon size={15} className="text-white/25 shrink-0" />
-                  <span className="font-body text-sm text-white/45">{label}</span>
-                </div>
-                <span className="font-body text-sm font-semibold text-white">{value}</span>
+          {/* Coluna direita — price card */}
+          <div className="order-first lg:order-2 lg:sticky lg:top-20">
+            <div className="rounded-2xl border border-white/5 bg-[#111118] p-6 flex flex-col gap-5">
+              <div>
+                <p className="font-body text-[10px] text-white/25 uppercase tracking-widest mb-1">Preço</p>
+                <p className="font-display font-bold text-[#C8F135] text-4xl leading-none">{fmt(vehicle.price)}</p>
               </div>
-            ))}
-          </div>
-        )}
 
-        {/* CTA */}
-        <div className="flex flex-col gap-3">
-          <LeadModal
-            tenantId={tenant.id}
-            whatsappPhone={tenant.whatsapp_phone}
-            vehicleId={vehicle.id}
-            vehicleName={vehicleName}
-            variant="primary"
-          />
-          <Link
-            href={`/loja/${slug}`}
-            className="flex items-center justify-center h-10 rounded-xl border border-white/10 text-white/40 font-body text-sm hover:border-white/20 hover:text-white/60 transition-colors"
-          >
-            Ver outros veículos
-          </Link>
+              <div className="h-px bg-white/5" />
+
+              {specs.length > 0 && (
+                <div className="flex flex-col gap-2.5">
+                  {specs.slice(0, 5).map(({ label, value }) => (
+                    <div key={label} className="flex justify-between items-center">
+                      <span className="font-body text-xs text-white/40">{label}</span>
+                      <span className="font-body text-sm font-medium text-white">{value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="h-px bg-white/5" />
+
+              <div className="flex flex-col gap-2">
+                <LeadModal
+                  tenantId={tenant.id}
+                  whatsappPhone={tenant.whatsapp_phone}
+                  vehicleId={vehicle.id}
+                  vehicleName={vehicleName}
+                  variant="primary"
+                />
+                {waVehicle && (
+                  <a
+                    href={waVehicle}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 h-10 rounded-xl border border-white/10 text-white/40 font-body text-sm hover:border-white/20 hover:text-white/60 transition-colors"
+                  >
+                    <MessageCircle size={14} />
+                    Chamar no WhatsApp
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Contato & Localização */}
+        <ContactSection
+          tenantName={tenant.name}
+          contactEmail={tenant.contact_email}
+          contactPhone={tenant.contact_phone}
+          address={tenant.address}
+          businessHours={tenant.business_hours}
+        />
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 mt-8">
-        <div className="max-w-3xl mx-auto px-4 h-12 flex items-center justify-center">
+      <footer className="border-t border-white/5 mt-4">
+        <div className="max-w-[1100px] mx-auto px-4 h-14 flex items-center justify-between">
+          <p className="font-body text-xs text-white/20">© {new Date().getFullYear()} {tenant.name}</p>
           <a
             href="https://www.instagram.com/usecarvys"
             target="_blank"
