@@ -1,14 +1,16 @@
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label: string
+  label?: string
   error?: string
 }
 
 export function Input({ label, error, className = '', ...props }: InputProps) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="font-body text-xs font-medium text-slate uppercase tracking-widest">
-        {label}
-      </label>
+      {label && (
+        <label className="font-body text-xs font-medium text-slate uppercase tracking-widest">
+          {label}
+        </label>
+      )}
       <input
         className={[
           'h-12 rounded-lg bg-surface border px-4',
