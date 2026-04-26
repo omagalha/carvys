@@ -34,8 +34,8 @@ export async function createInstance(name: string, webhookUrl: string): Promise<
 
 export async function getQRCode(name: string): Promise<string | null> {
   try {
-    const data = await req<{ base64?: string; code?: string }>(`/instance/connect/${name}`)
-    const raw  = data.base64 ?? null
+    const data = await req<{ base64?: string; code?: string; qrcode?: { base64?: string } }>(`/instance/connect/${name}`)
+    const raw  = data.base64 ?? data.qrcode?.base64 ?? null
     if (!raw) return null
     return raw.startsWith('data:') ? raw : `data:image/png;base64,${raw}`
   } catch {
@@ -45,8 +45,8 @@ export async function getQRCode(name: string): Promise<string | null> {
 
 export async function getConnectionState(name: string): Promise<'open' | 'connecting' | 'close'> {
   try {
-    const data = await req<{ instance?: { state: string } }>(`/instance/connectionState/${name}`)
-    const s = data.instance?.state
+    const data = await req<{ instance?: { state?: string; connectionStatus?: string } }>(`/instance/connectionState/${name}`)
+    const s = data.instance?.state ?? data.instance?.connectionStatus
     if (s === 'open') return 'open'
     if (s === 'connecting') return 'connecting'
     return 'close'
@@ -57,10 +57,11 @@ export async function getConnectionState(name: string): Promise<'open' | 'connec
 
 export async function getOwnerPhone(name: string): Promise<string | null> {
   try {
-    const data = await req<Array<{ instance: { instanceName: string; ownerJid?: string } }>>(`/instance/fetchInstances?instanceName=${name}`)
-    const found = (Array.isArray(data) ? data : [data as { instance: { ownerJid?: string } }])
-      .find(() => true)
-    return found?.instance?.ownerJid?.replace('@s.whatsapp.net', '') ?? null
+    const data = await req<unknown>(`/instance/fetchInstances?instanceName=${name}`)
+    const list = Array.isArray(data) ? data : [data]
+    const found = list[0] as { instance?: { ownerJid?: string }; ownerJid?: string } | undefined
+    const jid = found?.instance?.ownerJid ?? found?.ownerJid ?? null
+    return jid?.replace('@s.whatsapp.net', '') ?? null
   } catch {
     return null
   }
