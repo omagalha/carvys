@@ -79,6 +79,8 @@ export async function login(
     redirect(returnTo)
   }
 
+  if (user?.email === 'usecarvys@gmail.com') redirect('/admin')
+
   redirect('/app/dashboard')
 }
 
