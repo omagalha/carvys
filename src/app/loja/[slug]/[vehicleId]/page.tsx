@@ -147,7 +147,7 @@ export default async function VehiclePublicPage({
         </div>
       </header>
 
-      <main className="max-w-[1100px] mx-auto px-4 py-8 flex flex-col gap-8">
+      <main className="max-w-[1100px] mx-auto px-4 py-8 flex flex-col gap-8 overflow-x-clip">
 
         {/* Título */}
         <div>
@@ -164,7 +164,7 @@ export default async function VehiclePublicPage({
         <div className="grid grid-cols-1 md:grid-cols-[1fr_360px] gap-10 items-start">
 
           {/* Coluna esquerda */}
-          <div className="flex flex-col gap-8 order-2 md:order-1">
+          <div className="flex flex-col gap-8 order-2 md:order-1 min-w-0">
             <GalleryViewer images={allImages} vehicleName={vehicleName} />
 
             {description && (

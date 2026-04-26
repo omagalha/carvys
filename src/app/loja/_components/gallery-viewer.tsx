@@ -21,7 +21,7 @@ export function GalleryViewer({ images, vehicleName }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 min-w-0">
       <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-white/5">
         <Image
           src={images[active]}
