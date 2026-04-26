@@ -13,7 +13,7 @@ const updateLeadSchema = z.object({
 })
 
 const wonSaleSchema = z.object({
-  salePrice: z.number({ invalid_type_error: 'Valor inválido' }).positive('Valor deve ser maior que zero'),
+  salePrice: z.number().positive('Valor deve ser maior que zero'),
   costPrice: z.number().nonnegative().nullable(),
   vehicleId: z.string().uuid().nullable(),
 })
