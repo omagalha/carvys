@@ -161,10 +161,10 @@ export default async function VehiclePublicPage({
         </div>
 
         {/* Layout 2 colunas */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_360px] gap-10 items-start">
 
           {/* Coluna esquerda */}
-          <div className="flex flex-col gap-8 order-2 lg:order-1">
+          <div className="flex flex-col gap-8 order-2 md:order-1">
             <GalleryViewer images={allImages} vehicleName={vehicleName} />
 
             {description && (
@@ -190,7 +190,7 @@ export default async function VehiclePublicPage({
           </div>
 
           {/* Coluna direita — price card */}
-          <div className="order-first lg:order-2 lg:sticky lg:top-20">
+          <div className="order-first md:order-2 md:sticky md:top-20">
             <div className="rounded-2xl border border-white/5 bg-[#111118] p-6 flex flex-col gap-5">
               <div>
                 <p className="font-body text-[10px] text-white/25 uppercase tracking-widest mb-1">Preço</p>

@@ -125,12 +125,13 @@ export function TeamSection({ members, pendingInvites, planCode, currentUserId }
           <p className="font-body text-xs text-slate">Adicionar funcionário</p>
 
           <div className="flex gap-2">
-            <Input
-              name="email"
-              type="email"
-              placeholder="email@funcionario.com"
-              className="flex-1"
-            />
+            <div className="flex-1">
+              <Input
+                name="email"
+                type="email"
+                placeholder="email@funcionario.com"
+              />
+            </div>
             <select
               name="role"
               defaultValue="sales"
