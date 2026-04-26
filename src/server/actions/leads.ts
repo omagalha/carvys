@@ -20,7 +20,7 @@ const wonSaleSchema = z.object({
 
 const VALID_CHANNELS = ['whatsapp', 'phone', 'email', 'visit', 'outro'] as const
 const logContactSchema = z.object({
-  channel: z.enum(VALID_CHANNELS, { errorMap: () => ({ message: 'Canal inválido' }) }),
+  channel: z.enum(VALID_CHANNELS),
   note:    z.string().max(500),
 })
 
