@@ -30,7 +30,11 @@
       "PowerShell(cmd /c \"dir /b `\"c:\\\\Users\\\\Thales Magalh�es\\\\OneDrive\\\\Desktop\\\\carvys\\\\Carvys\\\\node_modules\\\\@types`\"\")",
       "PowerShell(cmd /c \"type `\"c:\\\\Users\\\\Thales Magalh�es\\\\OneDrive\\\\Desktop\\\\carvys\\\\Carvys\\\\.npmrc`\" 2>&1\")",
       "PowerShell(cmd /c \"npm config get omit\")",
-      "PowerShell(cmd /c \"cd `\"c:\\\\Users\\\\Thales Magalh�es\\\\OneDrive\\\\Desktop\\\\carvys\\\\Carvys`\" && npm install --include=dev 2>&1\")"
+      "PowerShell(cmd /c \"cd `\"c:\\\\Users\\\\Thales Magalh�es\\\\OneDrive\\\\Desktop\\\\carvys\\\\Carvys`\" && npm install --include=dev 2>&1\")",
+      "WebFetch(domain:docs.frappe.io)",
+      "WebFetch(domain:frappe.io)",
+      "WebFetch(domain:github.com)",
+      "WebSearch"
     ]
   }
 }

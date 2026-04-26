@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { X } from 'lucide-react'
-import { updateLeadStage, updateLeadStageWithReason } from '@/server/actions/leads'
+import { updateLeadStage, updateLeadStageWithReason, registerWonSale } from '@/server/actions/leads'
 
 const OPTIONS = [
   { value: 'new',         label: 'Novo' },
@@ -32,41 +32,58 @@ export function StageSelect({
   leadId,
   currentStage,
   currentLossReason,
+  interestVehicleId,
+  vehicleName,
 }: {
   leadId: string
   currentStage: string
   currentLossReason?: string | null
+  interestVehicleId?: string | null
+  vehicleName?: string
 }) {
   const [stage, setStage] = useState(currentStage)
   const [lossReason, setLossReason] = useState<string | null>(currentLossReason ?? null)
-  const [showModal, setShowModal] = useState(false)
+  const [showModal, setShowModal] = useState<'lost' | 'won' | null>(null)
   const [selectedReason, setSelectedReason] = useState<string | null>(null)
-  const [pending, startTransition] = useTransition()
+  const [salePrice, setSalePrice]   = useState('')
+  const [costPrice, setCostPrice]   = useState('')
+  const [pending, startTransition]  = useTransition()
 
   function handleChange(value: string) {
-    if (value === 'lost') {
-      setShowModal(true)
-      return
-    }
+    if (value === 'lost') { setShowModal('lost'); return }
+    if (value === 'won')  { setShowModal('won');  return }
     setStage(value)
     setLossReason(null)
-    startTransition(async () => {
-      await updateLeadStage(leadId, value)
-    })
+    startTransition(async () => { await updateLeadStage(leadId, value) })
   }
 
   function confirmLoss() {
     setStage('lost')
     setLossReason(selectedReason)
-    setShowModal(false)
+    setShowModal(null)
+    startTransition(async () => { await updateLeadStageWithReason(leadId, 'lost', selectedReason) })
+  }
+
+  function confirmWon() {
+    const price = parseFloat(salePrice.replace(',', '.'))
+    if (isNaN(price) || price <= 0) return
+    const cost  = costPrice ? parseFloat(costPrice.replace(',', '.')) : null
+    setStage('won')
+    setShowModal(null)
     startTransition(async () => {
-      await updateLeadStageWithReason(leadId, 'lost', selectedReason)
+      await registerWonSale(leadId, {
+        salePrice:  price,
+        costPrice:  (!cost || isNaN(cost)) ? null : cost,
+        vehicleId:  interestVehicleId ?? null,
+      })
     })
   }
 
   function cancelModal() {
     setSelectedReason(null)
-    setShowModal(false)
+    setSalePrice('')
+    setCostPrice('')
+    setShowModal(null)
   }
 
   const lossLabel = LOSS_REASONS.find(r => r.value === lossReason)
@@ -93,7 +110,7 @@ export function StageSelect({
             <span className="text-sm">{lossLabel.emoji}</span>
             <span className="font-body text-xs text-alert">{lossLabel.label}</span>
             <button
-              onClick={() => setShowModal(true)}
+              onClick={() => setShowModal('lost')}
               className="ml-auto font-body text-[10px] text-slate hover:text-white transition-colors"
             >
               Alterar
@@ -102,8 +119,8 @@ export function StageSelect({
         )}
       </div>
 
-      {/* Modal motivo de perda */}
-      {showModal && (
+      {/* ── Modal: motivo de perda ─────────────────────────────────── */}
+      {showModal === 'lost' && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={cancelModal} />
           <div className="relative w-full max-w-sm rounded-2xl bg-deep border border-surface p-6 flex flex-col gap-5">
@@ -152,6 +169,84 @@ export function StageSelect({
                 className="flex-1 h-10 rounded-lg bg-alert font-body text-sm font-semibold text-white disabled:opacity-40 hover:opacity-90 transition-opacity"
               >
                 Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: registrar venda ─────────────────────────────────── */}
+      {showModal === 'won' && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={cancelModal} />
+          <div className="relative w-full max-w-sm rounded-2xl bg-deep border border-surface p-6 flex flex-col gap-5">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="font-display font-bold text-white text-base">Registrar venda 🎉</h2>
+                <p className="font-body text-xs text-slate mt-1">
+                  {vehicleName ? vehicleName : 'Preencha os valores da venda.'}
+                </p>
+              </div>
+              <button
+                onClick={cancelModal}
+                className="flex h-7 w-7 items-center justify-center rounded-lg hover:bg-surface transition-colors shrink-0"
+              >
+                <X size={14} className="text-slate" />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="font-body text-xs text-slate">Valor de venda *</label>
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-slate">R$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0,00"
+                    value={salePrice}
+                    onChange={e => setSalePrice(e.target.value)}
+                    className="h-10 w-full rounded-lg border border-surface bg-void pl-9 pr-3 font-body text-sm text-white placeholder:text-slate/40 focus:outline-none focus:border-green transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="font-body text-xs text-slate">Custo do veículo (opcional)</label>
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-slate">R$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0,00"
+                    value={costPrice}
+                    onChange={e => setCostPrice(e.target.value)}
+                    className="h-10 w-full rounded-lg border border-surface bg-void pl-9 pr-3 font-body text-sm text-white placeholder:text-slate/40 focus:outline-none focus:border-green transition-colors"
+                  />
+                </div>
+                {salePrice && costPrice && (
+                  <p className="font-body text-xs text-green">
+                    Lucro estimado: {(parseFloat(salePrice.replace(',', '.')) - parseFloat(costPrice.replace(',', '.'))).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={cancelModal}
+                className="flex-1 h-10 rounded-lg border border-surface font-body text-sm text-slate hover:text-white transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmWon}
+                disabled={!salePrice || parseFloat(salePrice.replace(',', '.')) <= 0}
+                className="flex-1 h-10 rounded-lg bg-green font-body text-sm font-semibold text-[#0A0A0F] disabled:opacity-40 hover:opacity-90 transition-opacity"
+              >
+                Confirmar venda
               </button>
             </div>
           </div>

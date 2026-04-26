@@ -1,4 +1,5 @@
-import { GitCommitHorizontal, UserPlus, ArrowRight, FileText, CheckCircle2, Calendar } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { GitCommitHorizontal, UserPlus, ArrowRight, FileText, CheckCircle2, Calendar, PhoneCall } from 'lucide-react'
 import type { LeadEvent } from '@/server/queries/lead-events'
 import type { FollowUp } from '@/server/queries/follow-ups'
 
@@ -6,7 +7,7 @@ type TimelineItem = {
   id: string
   date: string
   description: string
-  kind: 'created' | 'stage_change' | 'note' | 'follow_up_done' | 'follow_up_pending'
+  kind: 'created' | 'stage_change' | 'note' | 'contact' | 'follow_up_done' | 'follow_up_pending'
 }
 
 function relativeTime(iso: string) {
@@ -25,11 +26,12 @@ function relativeTime(iso: string) {
 }
 
 const KIND_STYLE = {
-  created:          { color: 'bg-green',        icon: UserPlus,           text: 'text-green' },
-  stage_change:     { color: 'bg-blue-400',     icon: ArrowRight,         text: 'text-blue-400' },
-  note:             { color: 'bg-slate',         icon: FileText,           text: 'text-slate' },
-  follow_up_done:   { color: 'bg-green',         icon: CheckCircle2,       text: 'text-green' },
-  follow_up_pending:{ color: 'bg-yellow-400/60', icon: Calendar,           text: 'text-yellow-400' },
+  created:          { color: 'bg-green',        icon: UserPlus,    text: 'text-green' },
+  stage_change:     { color: 'bg-blue-400',     icon: ArrowRight,  text: 'text-blue-400' },
+  note:             { color: 'bg-slate',         icon: FileText,    text: 'text-slate' },
+  contact:          { color: 'bg-purple-400',   icon: PhoneCall,   text: 'text-purple-400' },
+  follow_up_done:   { color: 'bg-green',         icon: CheckCircle2, text: 'text-green' },
+  follow_up_pending:{ color: 'bg-yellow-400/60', icon: Calendar,   text: 'text-yellow-400' },
 }
 
 function buildItems(
@@ -79,10 +81,12 @@ export function Timeline({
   events,
   followUps,
   leadCreatedAt,
+  headerAction,
 }: {
   events: LeadEvent[]
   followUps: FollowUp[]
   leadCreatedAt: string
+  headerAction?: ReactNode
 }) {
   const items = buildItems(events, followUps, leadCreatedAt)
 
@@ -91,7 +95,8 @@ export function Timeline({
       <div className="flex items-center gap-2">
         <GitCommitHorizontal size={14} className="text-slate" />
         <h2 className="font-body font-semibold text-white text-sm">Histórico</h2>
-        <span className="ml-auto font-body text-xs text-slate">{items.length} evento{items.length !== 1 ? 's' : ''}</span>
+        <span className="ml-1 font-body text-xs text-slate">{items.length} evento{items.length !== 1 ? 's' : ''}</span>
+        {headerAction && <div className="ml-auto">{headerAction}</div>}
       </div>
 
       {items.length === 0 ? (

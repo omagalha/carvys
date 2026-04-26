@@ -2,9 +2,65 @@
 
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
+import { createHash } from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { loginSchema, signupSchema } from '@/lib/validations/auth'
+
+const MAX_ATTEMPTS   = 5
+const BLOCK_MINUTES  = 15
+
+function hashEmail(email: string) {
+  return createHash('sha256').update(email.toLowerCase().trim()).digest('hex')
+}
+
+async function checkRateLimit(email: string): Promise<string | null> {
+  const admin = createAdminClient()
+  const key   = hashEmail(email)
+  const now   = new Date()
+
+  const { data } = await admin
+    .from('login_attempts')
+    .select('count, blocked_until')
+    .eq('email_hash', key)
+    .single()
+
+  if (data?.blocked_until && new Date(data.blocked_until) > now) {
+    const minutes = Math.ceil((new Date(data.blocked_until).getTime() - now.getTime()) / 60000)
+    return `Conta temporariamente bloqueada. Tente novamente em ${minutes} min.`
+  }
+
+  return null
+}
+
+async function recordFailedAttempt(email: string) {
+  const admin = createAdminClient()
+  const key   = hashEmail(email)
+  const now   = new Date()
+
+  const { data } = await admin
+    .from('login_attempts')
+    .select('count')
+    .eq('email_hash', key)
+    .single()
+
+  const count       = (data?.count ?? 0) + 1
+  const blockedUntil = count >= MAX_ATTEMPTS
+    ? new Date(now.getTime() + BLOCK_MINUTES * 60 * 1000).toISOString()
+    : null
+
+  await admin.from('login_attempts').upsert({
+    email_hash:    key,
+    count,
+    blocked_until: blockedUntil,
+    last_attempt:  now.toISOString(),
+  })
+}
+
+async function clearAttempts(email: string) {
+  const admin = createAdminClient()
+  await admin.from('login_attempts').delete().eq('email_hash', hashEmail(email))
+}
 
 export type AuthState = { error: string; success?: boolean; userId?: string }
 
@@ -41,11 +97,16 @@ export async function login(
     return { error: parsed.error.issues[0]?.message ?? 'Dados invalidos.' }
   }
 
+  const blocked = await checkRateLimit(parsed.data.email)
+  if (blocked) return { error: blocked }
+
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithPassword(parsed.data)
 
   if (error) {
     console.error('[login error]', error.message, error.code)
+
+    await recordFailedAttempt(parsed.data.email)
 
     if (
       error.message.toLowerCase().includes('email') &&
@@ -58,6 +119,8 @@ export async function login(
 
     return { error: 'E-mail ou senha incorretos.' }
   }
+
+  await clearAttempts(parsed.data.email)
 
   const {
     data: { user },
@@ -134,14 +197,15 @@ export async function saveSignupPhone(
   _state: AuthState,
   formData: FormData
 ): Promise<AuthState> {
-  const userId = formData.get('user_id') as string
-  const phone  = (formData.get('phone') as string)?.trim()
+  const phone = (formData.get('phone') as string)?.trim()
+  if (!phone) return { error: 'Informe seu telefone.' }
 
-  if (!userId) return { error: 'Sessão inválida.' }
-  if (!phone)  return { error: 'Informe seu telefone.' }
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Sessão inválida.' }
 
   const admin = createAdminClient()
-  await admin.from('profiles').update({ phone }).eq('id', userId)
+  await admin.from('profiles').update({ phone }).eq('id', user.id)
 
   return { error: '', success: true }
 }

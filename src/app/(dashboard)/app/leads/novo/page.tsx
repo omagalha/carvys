@@ -63,6 +63,25 @@ export default function NovoLeadPage() {
         </section>
 
         <section className="flex flex-col gap-4 rounded-xl bg-deep border border-surface p-5">
+          <h2 className="font-body font-semibold text-white text-sm">Negócio</h2>
+          <div className="flex flex-col gap-1.5">
+            <label className="font-body text-xs font-medium text-slate">Valor esperado (opcional)</label>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-slate">R$</span>
+              <input
+                type="number"
+                name="expected_value"
+                min="0"
+                step="1000"
+                placeholder="0"
+                className="h-11 w-full rounded-lg border border-surface bg-void pl-9 pr-3 font-body text-sm text-white placeholder:text-slate/40 focus:outline-none focus:border-green transition-colors"
+              />
+            </div>
+            <p className="font-body text-[10px] text-slate">Quanto o cliente pretende gastar. Usado para calcular o valor total do pipeline.</p>
+          </div>
+        </section>
+
+        <section className="flex flex-col gap-4 rounded-xl bg-deep border border-surface p-5">
           <h2 className="font-body font-semibold text-white text-sm">Observações</h2>
           <div className="flex flex-col gap-1.5">
             <label className="font-body text-xs font-medium text-slate">Notas iniciais</label>

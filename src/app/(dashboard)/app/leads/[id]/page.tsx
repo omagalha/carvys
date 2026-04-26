@@ -1,15 +1,19 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Phone, Mail, Car, MessageCircle, MessageCircle as WA, PhoneCall, Calendar, MapPin, CheckCircle2, Clock } from 'lucide-react'
+import { ArrowLeft, Mail, MessageCircle, MessageCircle as WA, PhoneCall, Calendar, MapPin, CheckCircle2, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getUserTenants } from '@/server/queries/tenants'
 import { getLead } from '@/server/queries/leads'
 import { getLeadFollowUps } from '@/server/queries/follow-ups'
 import type { FollowUp } from '@/server/queries/follow-ups'
+import { getVehicles } from '@/server/queries/vehicles'
 import { StageSelect } from './stage-select'
 import { NotesEditor } from './notes-editor'
 import { WATemplates } from './wa-templates'
 import { Timeline } from './timeline'
+import { LeadEditor } from './lead-editor'
+import { VehicleSelector } from './vehicle-selector'
+import { LogContact } from './log-contact'
 import { calcTemperature, TEMP_CONFIG } from '@/lib/temperature'
 import { getLeadEvents } from '@/server/queries/lead-events'
 
@@ -50,10 +54,11 @@ export default async function LeadDetailPage({
   if (memberships.length === 0) redirect('/onboarding')
 
   const tenant = memberships[0].tenants as { id: string }
-  const [lead, followUps, events] = await Promise.all([
+  const [lead, followUps, events, vehicles] = await Promise.all([
     getLead(id, tenant.id),
     getLeadFollowUps(id, tenant.id),
     getLeadEvents(id, tenant.id),
+    getVehicles(tenant.id, 'available'),
   ])
   if (!lead) notFound()
 
@@ -96,12 +101,28 @@ export default async function LeadDetailPage({
       {/* Etapa */}
       <section className="flex flex-col gap-3 rounded-xl bg-deep border border-surface p-5">
         <h2 className="font-body font-semibold text-white text-sm">Etapa do funil</h2>
-        <StageSelect leadId={lead.id} currentStage={lead.stage} currentLossReason={lead.loss_reason} />
+        <StageSelect
+          leadId={lead.id}
+          currentStage={lead.stage}
+          currentLossReason={lead.loss_reason}
+          interestVehicleId={lead.interest_vehicle_id}
+          vehicleName={lead.vehicles
+            ? `${lead.vehicles.brand} ${lead.vehicles.model}${lead.vehicles.year_model ? ` ${lead.vehicles.year_model}` : ''}`
+            : undefined}
+        />
       </section>
 
       {/* Contato */}
       <section className="flex flex-col gap-3 rounded-xl bg-deep border border-surface p-5">
-        <h2 className="font-body font-semibold text-white text-sm">Contato</h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-body font-semibold text-white text-sm">Contato</h2>
+          <LeadEditor
+            leadId={lead.id}
+            initialName={lead.name}
+            initialPhone={lead.phone}
+            initialEmail={lead.email}
+          />
+        </div>
 
         <a
           href={whatsappLink(lead.phone)}
@@ -146,21 +167,24 @@ export default async function LeadDetailPage({
       />
 
       {/* Veículo de interesse */}
-      {lead.vehicles && (
-        <section className="flex flex-col gap-3 rounded-xl bg-deep border border-surface p-5">
+      <section className="flex flex-col gap-3 rounded-xl bg-deep border border-surface p-5">
+        <div className="flex items-center justify-between gap-2">
           <h2 className="font-body font-semibold text-white text-sm">Veículo de interesse</h2>
-          <Link
-            href={`/app/vehicles/${lead.interest_vehicle_id}`}
-            className="flex items-center gap-3 h-11 px-4 rounded-lg border border-surface hover:border-slate/40 transition-colors"
-          >
-            <Car size={16} className="text-slate" />
-            <span className="font-body text-sm text-white">
-              {lead.vehicles.brand} {lead.vehicles.model}
-              {lead.vehicles.year_model ? ` ${lead.vehicles.year_model}` : ''}
-            </span>
-          </Link>
-        </section>
-      )}
+          {lead.interest_vehicle_id && (
+            <Link
+              href={`/app/vehicles/${lead.interest_vehicle_id}`}
+              className="font-body text-xs text-slate hover:text-white transition-colors"
+            >
+              Ver ficha
+            </Link>
+          )}
+        </div>
+        <VehicleSelector
+          leadId={lead.id}
+          currentVehicleId={lead.interest_vehicle_id}
+          vehicles={vehicles.map(v => ({ id: v.id, brand: v.brand, model: v.model, year_model: v.year_model }))}
+        />
+      </section>
 
       {/* Notas */}
       <section className="flex flex-col gap-3 rounded-xl bg-deep border border-surface p-5">
@@ -169,7 +193,12 @@ export default async function LeadDetailPage({
       </section>
 
       {/* Timeline */}
-      <Timeline events={events} followUps={followUps} leadCreatedAt={lead.created_at} />
+      <Timeline
+        events={events}
+        followUps={followUps}
+        leadCreatedAt={lead.created_at}
+        headerAction={<LogContact leadId={lead.id} />}
+      />
 
       {/* Follow-ups */}
       <section className="flex flex-col gap-3 rounded-xl bg-deep border border-surface p-5">
