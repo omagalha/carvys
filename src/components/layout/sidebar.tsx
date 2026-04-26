@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Car, Users, Bell, TrendingUp, Settings, ExternalLink } from 'lucide-react'
+import { LayoutDashboard, Car, Users, Bell, TrendingUp, Settings, ExternalLink, FileText } from 'lucide-react'
 
 const BASE_NAV = [
-  { href: '/app/dashboard',  label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/app/vehicles',   label: 'Estoque',   icon: Car },
-  { href: '/app/leads',      label: 'Leads',     icon: Users },
-  { href: '/app/follow-ups', label: 'Tarefas',   icon: Bell },
+  { href: '/app/dashboard',   label: 'Dashboard',  icon: LayoutDashboard },
+  { href: '/app/vehicles',    label: 'Estoque',    icon: Car },
+  { href: '/app/leads',       label: 'Leads',      icon: Users },
+  { href: '/app/follow-ups',  label: 'Tarefas',    icon: Bell },
+  { href: '/app/relatorios',  label: 'Relatórios', icon: FileText },
 ]
 
 const FINANCIAL_NAV = { href: '/app/financeiro', label: 'Financeiro', icon: TrendingUp }

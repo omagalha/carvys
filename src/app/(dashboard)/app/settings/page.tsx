@@ -9,6 +9,7 @@ import { ProfileForm } from './profile-form'
 import { TenantForm } from './tenant-form'
 import { StoreInfoForm } from './store-info-form'
 import { TeamSection, type TeamMember, type PendingInvite } from './team-section'
+import { WhatsAppSection } from './whatsapp-section'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -19,17 +20,14 @@ export default async function SettingsPage() {
   if (memberships.length === 0) redirect('/onboarding')
 
   const tenant = memberships[0].tenants
+  const admin  = createAdminClient()
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name, phone')
-    .eq('id', user.id)
-    .single()
+  const [{ data: profile }, { data: waSession }] = await Promise.all([
+    supabase.from('profiles').select('full_name, phone').eq('id', user.id).single(),
+    admin.from('whatsapp_sessions').select('status, phone_number').eq('tenant_id', tenant.id).maybeSingle(),
+  ])
 
   const tenantPlan = tenant.plan_code ?? 'trial'
-
-  // Fetch team members
-  const admin = createAdminClient()
   const { data: membershipRows } = await admin
     .from('tenant_memberships')
     .select('id, user_id, role, can_view_financials')
@@ -114,6 +112,12 @@ export default async function SettingsPage() {
         pendingInvites={pendingInvites}
         planCode={tenantPlan}
         currentUserId={user.id}
+      />
+
+      {/* WhatsApp */}
+      <WhatsAppSection
+        initialStatus={waSession?.status === 'connected' ? 'connected' : 'disconnected'}
+        initialPhone={waSession?.phone_number}
       />
 
       {/* Site da loja */}

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { GitCommitHorizontal, UserPlus, ArrowRight, FileText, CheckCircle2, Calendar, PhoneCall } from 'lucide-react'
+import { GitCommitHorizontal, UserPlus, ArrowRight, FileText, CheckCircle2, Calendar, PhoneCall, MessageCircle, Send } from 'lucide-react'
 import type { LeadEvent } from '@/server/queries/lead-events'
 import type { FollowUp } from '@/server/queries/follow-ups'
 
@@ -7,7 +7,7 @@ type TimelineItem = {
   id: string
   date: string
   description: string
-  kind: 'created' | 'stage_change' | 'note' | 'contact' | 'follow_up_done' | 'follow_up_pending'
+  kind: 'created' | 'stage_change' | 'note' | 'contact' | 'follow_up_done' | 'follow_up_pending' | 'whatsapp_in' | 'whatsapp_out'
 }
 
 function relativeTime(iso: string) {
@@ -26,12 +26,14 @@ function relativeTime(iso: string) {
 }
 
 const KIND_STYLE = {
-  created:          { color: 'bg-green',        icon: UserPlus,    text: 'text-green' },
-  stage_change:     { color: 'bg-blue-400',     icon: ArrowRight,  text: 'text-blue-400' },
-  note:             { color: 'bg-slate',         icon: FileText,    text: 'text-slate' },
-  contact:          { color: 'bg-purple-400',   icon: PhoneCall,   text: 'text-purple-400' },
-  follow_up_done:   { color: 'bg-green',         icon: CheckCircle2, text: 'text-green' },
-  follow_up_pending:{ color: 'bg-yellow-400/60', icon: Calendar,   text: 'text-yellow-400' },
+  created:           { color: 'bg-green',         icon: UserPlus,      text: 'text-green' },
+  stage_change:      { color: 'bg-blue-400',      icon: ArrowRight,    text: 'text-blue-400' },
+  note:              { color: 'bg-slate',          icon: FileText,      text: 'text-slate' },
+  contact:           { color: 'bg-purple-400',    icon: PhoneCall,     text: 'text-purple-400' },
+  follow_up_done:    { color: 'bg-green',          icon: CheckCircle2,  text: 'text-green' },
+  follow_up_pending: { color: 'bg-yellow-400/60', icon: Calendar,      text: 'text-yellow-400' },
+  whatsapp_in:       { color: 'bg-[#25D366]',     icon: MessageCircle, text: 'text-[#25D366]' },
+  whatsapp_out:      { color: 'bg-[#25D366]/40',  icon: Send,          text: 'text-[#25D366]/70' },
 }
 
 function buildItems(

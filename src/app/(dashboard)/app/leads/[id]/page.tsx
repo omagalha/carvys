@@ -14,8 +14,10 @@ import { Timeline } from './timeline'
 import { LeadEditor } from './lead-editor'
 import { VehicleSelector } from './vehicle-selector'
 import { LogContact } from './log-contact'
+import { WASend } from './wa-send'
 import { calcTemperature, TEMP_CONFIG } from '@/lib/temperature'
 import { getLeadEvents } from '@/server/queries/lead-events'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 const SOURCE_LABEL: Record<string, string> = {
   instagram: 'Instagram',
@@ -54,11 +56,13 @@ export default async function LeadDetailPage({
   if (memberships.length === 0) redirect('/onboarding')
 
   const tenant = memberships[0].tenants as { id: string }
-  const [lead, followUps, events, vehicles] = await Promise.all([
+  const admin = createAdminClient()
+  const [lead, followUps, events, vehicles, waSession] = await Promise.all([
     getLead(id, tenant.id),
     getLeadFollowUps(id, tenant.id),
     getLeadEvents(id, tenant.id),
     getVehicles(tenant.id, 'available'),
+    admin.from('whatsapp_sessions').select('status').eq('tenant_id', tenant.id).maybeSingle(),
   ])
   if (!lead) notFound()
 
@@ -197,7 +201,14 @@ export default async function LeadDetailPage({
         events={events}
         followUps={followUps}
         leadCreatedAt={lead.created_at}
-        headerAction={<LogContact leadId={lead.id} />}
+        headerAction={
+          <>
+            {waSession.data?.status === 'connected' && (
+              <WASend leadId={lead.id} phone={lead.phone} />
+            )}
+            <LogContact leadId={lead.id} />
+          </>
+        }
       />
 
       {/* Follow-ups */}

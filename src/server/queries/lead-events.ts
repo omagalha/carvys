@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 
 export type LeadEvent = {
   id: string
-  type: 'created' | 'stage_change' | 'note'
+  type: 'created' | 'stage_change' | 'note' | 'contact' | 'whatsapp_in' | 'whatsapp_out'
   description: string
   created_at: string
 }
