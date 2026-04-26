@@ -554,7 +554,7 @@ export function PipelineClient({ leads }: { leads: LeadWithVehicle[] }) {
                 >
                   Todas
                 </button>
-                {(['hot', 'warm', 'cold', 'frozen'] as const).map(t => {
+                {(['hot', 'warm', 'cold'] as const).map(t => {
                   const cfg = TEMP_CONFIG[t]
                   return (
                     <button

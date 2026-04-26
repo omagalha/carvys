@@ -65,7 +65,7 @@ export default async function DashboardPage() {
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
   const todayEnd   = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString()
 
-  const [vehiclesRes, leadsRes, pendingRes, todayRes, sales, vehiclesList] = await Promise.all([
+  const [vehiclesRes, leadsRes, pendingRes, todayRes, sales, vehiclesList, allLeadsRes] = await Promise.all([
     supabase
       .from('vehicles')
       .select('id', { count: 'exact', head: true })
@@ -100,6 +100,10 @@ export default async function DashboardPage() {
       .neq('status', 'sold')
       .order('created_at', { ascending: false })
       .limit(6),
+    supabase
+      .from('leads')
+      .select('id, stage, expected_value')
+      .eq('tenant_id', tenant.id),
   ])
 
   const { revenue, profit, count: soldCount } = calcSummary(sales)
@@ -108,6 +112,23 @@ export default async function DashboardPage() {
   const pendingCount = pendingRes.count ?? 0
   const leadsCount   = leadsRes.count ?? 0
   const vehicles     = vehiclesList.data ?? []
+
+  const allLeads     = (allLeadsRes.data ?? []) as { id: string; stage: string; expected_value: number | null }[]
+  const wonLeads     = allLeads.filter(l => l.stage === 'won')
+  const closedLeads  = allLeads.filter(l => l.stage === 'won' || l.stage === 'lost')
+  const convRate     = closedLeads.length > 0 ? Math.round((wonLeads.length / closedLeads.length) * 100) : null
+  const pipelineVal  = allLeads
+    .filter(l => l.stage !== 'won' && l.stage !== 'lost')
+    .reduce((s, l) => s + (l.expected_value ?? 0), 0)
+
+  const stageBreakdown = [
+    { key: 'new',         label: 'Novos',      color: 'bg-slate' },
+    { key: 'contacted',   label: 'Contatados', color: 'bg-blue-400' },
+    { key: 'negotiating', label: 'Negociando', color: 'bg-yellow-400' },
+    { key: 'won',         label: 'Ganhos',     color: 'bg-green' },
+    { key: 'lost',        label: 'Perdidos',   color: 'bg-alert' },
+  ].map(s => ({ ...s, count: allLeads.filter(l => l.stage === s.key).length }))
+  const totalLeads = allLeads.length
 
   const kpis = [
     { label: 'No estoque',    value: vehiclesRes.count ?? 0, icon: Car,   href: '/app/vehicles',   hint: 'disponíveis' },
@@ -178,6 +199,51 @@ export default async function DashboardPage() {
             </Link>
           ))}
         </div>
+
+        {/* Funil de leads */}
+        {totalLeads > 0 && (
+          <section className="flex flex-col gap-3 rounded-xl bg-deep border border-surface p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users size={14} className="text-green" />
+                <h2 className="font-body font-semibold text-white text-sm">Funil de leads</h2>
+              </div>
+              <div className="flex items-center gap-3">
+                {pipelineVal > 0 && (
+                  <span className="font-body text-xs text-green/80 font-medium">{fmt(pipelineVal)} no pipeline</span>
+                )}
+                {convRate !== null && (
+                  <span className="font-body text-xs text-slate">{convRate}% conversão</span>
+                )}
+                <Link href="/app/leads" className="font-body text-xs text-slate hover:text-green transition-colors">
+                  Ver pipeline →
+                </Link>
+              </div>
+            </div>
+
+            {/* Barra visual */}
+            <div className="flex h-2 rounded-full overflow-hidden gap-px">
+              {stageBreakdown.filter(s => s.count > 0).map(s => (
+                <div
+                  key={s.key}
+                  className={`${s.color} opacity-80`}
+                  style={{ flex: s.count }}
+                  title={`${s.label}: ${s.count}`}
+                />
+              ))}
+            </div>
+
+            {/* Labels */}
+            <div className="grid grid-cols-5 gap-1">
+              {stageBreakdown.map(s => (
+                <div key={s.key} className="flex flex-col items-center gap-1">
+                  <span className="font-display font-bold text-white text-lg leading-none">{s.count}</span>
+                  <span className="font-body text-[10px] text-slate text-center leading-tight">{s.label}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Agenda do dia */}
         <section className="flex flex-col gap-3 rounded-xl bg-deep border border-surface p-5">

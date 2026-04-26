@@ -26,7 +26,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex flex-col h-screen bg-void">
-      <TopBar tenantName={tenant.name} userInitials={initials} />
+      <TopBar tenantName={tenant.name} userInitials={initials} tenantId={tenant.id} />
 
       <div className="flex flex-1 overflow-hidden">
         <Sidebar slug={tenant.slug} plan={tenant.plan_code} canViewFinancials={memberships[0].can_view_financials} />
