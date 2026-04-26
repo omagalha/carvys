@@ -20,8 +20,8 @@ type ReportSale = {
   sale_price: number
   cost_price: number | null
   sold_at: string
-  vehicles: { brand: string; model: string; year_model: number | null } | null
-  leads: { name: string; phone: string } | null
+  vehicles: { brand: string; model: string; year_model: number | null } | { brand: string; model: string; year_model: number | null }[] | null
+  leads: { name: string; phone: string } | { name: string; phone: string }[] | null
 }
 
 type ReportFollowUp = {
@@ -114,16 +114,20 @@ export function ReportsClient({
 
   function exportSales() {
     const headers = ['Lead', 'Telefone', 'Veículo', 'Ano', 'Preço de venda', 'Custo', 'Lucro', 'Data da venda']
-    const rows = filteredSales.map(s => [
-      s.leads?.name ?? '',
-      s.leads?.phone ?? '',
-      s.vehicles ? `${s.vehicles.brand} ${s.vehicles.model}` : '',
-      String(s.vehicles?.year_model ?? ''),
-      String(s.sale_price),
-      String(s.cost_price ?? ''),
-      String(s.sale_price - (s.cost_price ?? 0)),
-      fmtDate(s.sold_at),
-    ])
+    const rows = filteredSales.map(s => {
+      const lead     = Array.isArray(s.leads)    ? s.leads[0]    : s.leads
+      const vehicle  = Array.isArray(s.vehicles) ? s.vehicles[0] : s.vehicles
+      return [
+        lead?.name ?? '',
+        lead?.phone ?? '',
+        vehicle ? `${vehicle.brand} ${vehicle.model}` : '',
+        String(vehicle?.year_model ?? ''),
+        String(s.sale_price),
+        String(s.cost_price ?? ''),
+        String(s.sale_price - (s.cost_price ?? 0)),
+        fmtDate(s.sold_at),
+      ]
+    })
     downloadCSV('vendas.csv', toCSV(headers, rows))
   }
 
