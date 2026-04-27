@@ -38,9 +38,13 @@ export async function connectWhatsApp(): Promise<{ qr: string | null; error?: st
 
     try {
       await evo.createInstance(name, webhookUrl())
-    } catch {
+    } catch (e) {
+      console.error('[whatsapp] createInstance error:', e)
       // Instance may already exist — continue
     }
+
+    // Small delay for Evolution API to generate QR
+    await new Promise(r => setTimeout(r, 1000))
 
     const qr = await evo.getQRCode(name)
     return { qr }

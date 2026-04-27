@@ -34,7 +34,8 @@
       "WebFetch(domain:docs.frappe.io)",
       "WebFetch(domain:frappe.io)",
       "WebFetch(domain:github.com)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(git commit *)"
     ]
   }
 }

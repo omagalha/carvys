@@ -34,11 +34,17 @@ export async function createInstance(name: string, webhookUrl: string): Promise<
 
 export async function getQRCode(name: string): Promise<string | null> {
   try {
-    const data = await req<{ base64?: string; code?: string; qrcode?: { base64?: string } }>(`/instance/connect/${name}`)
-    const raw  = data.base64 ?? data.qrcode?.base64 ?? null
+    const data = await req<{
+      base64?: string
+      code?: string
+      qrcode?: { base64?: string; code?: string }
+      pairingCode?: string | null
+    }>(`/instance/connect/${name}`)
+    const raw = data.base64 ?? data.qrcode?.base64 ?? null
     if (!raw) return null
     return raw.startsWith('data:') ? raw : `data:image/png;base64,${raw}`
-  } catch {
+  } catch (e) {
+    console.error('[evolution] getQRCode error:', e)
     return null
   }
 }

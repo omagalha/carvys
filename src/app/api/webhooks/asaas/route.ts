@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     SUBSCRIPTION_DELETED: 'Assinatura cancelada',
   }
 
-  if (event === 'SUBSCRIPTION_DELETED') {
+  if (event === 'SUBSCRIPTION_DELETED' || event === 'SUBSCRIPTION_INACTIVATED') {
     await admin
       .from('tenants')
       .update({ status: 'canceled', canceled_at: new Date().toISOString() })
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
     await admin.from('tenant_events').insert({
       tenant_id: tenant.id,
       type: 'status_changed',
-      description: 'Assinatura cancelada pelo cliente',
+      description: event === 'SUBSCRIPTION_DELETED' ? 'Assinatura cancelada' : 'Assinatura inativada',
     })
 
     return NextResponse.json({ ok: true })
