@@ -80,12 +80,11 @@ export async function checkWhatsAppStatus(): Promise<{
       return { status: 'connected', phone: phone ?? undefined }
     }
 
-    if (state === 'connecting') {
-      const qr = await evo.getQRCode(name)
-      return { status: 'connecting', qr }
-    }
+    // Try QR for both 'connecting' and 'close' — instance may still be initializing
+    const qr = await evo.getQRCode(name)
+    if (qr) return { status: 'connecting', qr }
 
-    return { status: 'disconnected' }
+    return { status: state === 'connecting' ? 'connecting' : 'disconnected' }
   } catch {
     return { status: 'disconnected' }
   }
