@@ -4,11 +4,12 @@ import { useState, useActionState, useEffect } from 'react'
 import { X, MessageCircle, Loader2, CheckCircle } from 'lucide-react'
 import { createPublicLead } from '@/server/actions/public'
 
-type Variant = 'card' | 'primary'
+type Variant = 'card' | 'primary' | 'whatsapp'
 
 const BUTTON_STYLES: Record<Variant, string> = {
-  card: 'flex items-center justify-center gap-1.5 h-8 w-full rounded-lg bg-[#C8F135]/10 text-[#C8F135] font-body text-xs font-semibold hover:bg-[#C8F135]/20 transition-colors',
-  primary: 'flex items-center justify-center gap-2 h-12 w-full rounded-xl bg-[#C8F135] text-[#0A0A0F] font-body font-bold text-sm hover:opacity-90 transition-opacity',
+  card:      'flex items-center justify-center gap-1.5 h-8 w-full rounded-lg bg-[#C8F135]/10 text-[#C8F135] font-body text-xs font-semibold hover:bg-[#C8F135]/20 transition-colors',
+  primary:   'flex items-center justify-center gap-2 h-12 w-full rounded-xl bg-[#C8F135] text-[#0A0A0F] font-body font-bold text-sm hover:opacity-90 transition-opacity',
+  whatsapp:  'flex items-center justify-center gap-2 h-10 w-full rounded-xl border border-white/10 text-white/40 font-body text-sm hover:border-[#25D366]/30 hover:text-[#25D366]/70 transition-colors',
 }
 
 type Props = {
@@ -44,7 +45,7 @@ export function LeadModal({ tenantId, whatsappPhone, vehicleId, vehicleName, var
     <>
       <button type="button" onClick={() => setOpen(true)} className={BUTTON_STYLES[variant]}>
         <MessageCircle size={variant === 'primary' ? 18 : 13} />
-        Tenho interesse
+        {variant === 'whatsapp' ? 'Chamar no WhatsApp' : 'Tenho interesse'}
       </button>
 
       {open && (

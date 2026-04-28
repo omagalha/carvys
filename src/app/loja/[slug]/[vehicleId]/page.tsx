@@ -220,16 +220,14 @@ export default async function VehiclePublicPage({
                   vehicleName={vehicleName}
                   variant="primary"
                 />
-                {waVehicle && (
-                  <a
-                    href={waVehicle}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 h-10 rounded-xl border border-white/10 text-white/40 font-body text-sm hover:border-white/20 hover:text-white/60 transition-colors"
-                  >
-                    <MessageCircle size={14} />
-                    Chamar no WhatsApp
-                  </a>
+                {tenant.whatsapp_phone && (
+                  <LeadModal
+                    tenantId={tenant.id}
+                    whatsappPhone={tenant.whatsapp_phone}
+                    vehicleId={vehicle.id}
+                    vehicleName={vehicleName}
+                    variant="whatsapp"
+                  />
                 )}
               </div>
             </div>

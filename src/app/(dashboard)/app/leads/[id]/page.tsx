@@ -139,6 +139,10 @@ export default async function LeadDetailPage({
           <span className="font-body text-xs text-[#25D366] ml-auto">Abrir WhatsApp</span>
         </a>
 
+        {waSession.data?.status === 'connected' && (
+          <WASend leadId={lead.id} phone={lead.phone} />
+        )}
+
         {lead.email && (
           <a
             href={`mailto:${lead.email}`}
@@ -201,14 +205,7 @@ export default async function LeadDetailPage({
         events={events}
         followUps={followUps}
         leadCreatedAt={lead.created_at}
-        headerAction={
-          <>
-            {waSession.data?.status === 'connected' && (
-              <WASend leadId={lead.id} phone={lead.phone} />
-            )}
-            <LogContact leadId={lead.id} />
-          </>
-        }
+        headerAction={<LogContact leadId={lead.id} />}
       />
 
       {/* Follow-ups */}
