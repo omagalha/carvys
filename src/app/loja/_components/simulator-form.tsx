@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition } from 'react'
 import { Calculator, CheckCircle, Loader2 } from 'lucide-react'
 import { createSimulationLead } from '@/server/actions/public'
 
@@ -33,7 +33,6 @@ function fmtCPF(v: string) {
 
 export function SimulatorForm({ tenantId, vehicleId, vehicleName, vehiclePrice }: Props) {
   const [entry,     setEntry]     = useState(Math.round(vehiclePrice * 0.2))
-  const [rate,      setRate]      = useState(DEFAULT_RATE)
   const [months,    setMonths]    = useState(48)
   const [name,      setName]      = useState('')
   const [phone,     setPhone]     = useState('')
@@ -43,9 +42,9 @@ export function SimulatorForm({ tenantId, vehicleId, vehicleName, vehiclePrice }
   const [error,     setError]     = useState('')
   const [pending,   start]        = useTransition()
 
-  const financed   = Math.max(0, vehiclePrice - entry)
-  const installment = calcPMT(financed, rate, months)
-  const total      = installment * months + entry
+  const financed    = Math.max(0, vehiclePrice - entry)
+  const installment = calcPMT(financed, DEFAULT_RATE, months)
+  const total       = installment * months + entry
   const entryPct   = Math.round((entry / vehiclePrice) * 100)
 
   function handleEntry(e: React.ChangeEvent<HTMLInputElement>) {
@@ -64,7 +63,7 @@ export function SimulatorForm({ tenantId, vehicleId, vehicleName, vehiclePrice }
       const res = await createSimulationLead({
         tenantId, vehicleId, vehicleName,
         name, phone, cpf, birthDate,
-        entry, rate, months,
+        entry, rate: DEFAULT_RATE, months,
         installment: Math.round(installment),
         total: Math.round(total),
         vehiclePrice,
@@ -131,41 +130,24 @@ export function SimulatorForm({ tenantId, vehicleId, vehicleName, vehiclePrice }
         </div>
       </div>
 
-      {/* Taxa + Prazo */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-1.5">
-          <label className="font-body text-xs text-white/50">Taxa a.m. (%)</label>
-          <div className="flex items-center gap-2 h-10 rounded-lg border border-white/10 bg-white/5 px-3">
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              max="10"
-              value={rate}
-              onChange={e => setRate(Number(e.target.value))}
-              className="flex-1 bg-transparent font-body text-sm text-white outline-none"
-            />
-            <span className="font-body text-xs text-white/30">%</span>
-          </div>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label className="font-body text-xs text-white/50">Prazo</label>
-          <div className="flex gap-1">
-            {TERMS.map(t => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setMonths(t)}
-                className={`flex-1 h-10 rounded-lg font-body text-xs font-semibold transition-colors ${
-                  months === t
-                    ? 'bg-[#C8F135] text-[#0A0A0F]'
-                    : 'border border-white/10 text-white/40 hover:border-white/20 hover:text-white/60'
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
+      {/* Prazo */}
+      <div className="flex flex-col gap-1.5">
+        <label className="font-body text-xs text-white/50">Prazo</label>
+        <div className="flex gap-1">
+          {TERMS.map(t => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setMonths(t)}
+              className={`flex-1 h-10 rounded-lg font-body text-xs font-semibold transition-colors ${
+                months === t
+                  ? 'bg-[#C8F135] text-[#0A0A0F]'
+                  : 'border border-white/10 text-white/40 hover:border-white/20 hover:text-white/60'
+              }`}
+            >
+              {t}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -173,8 +155,8 @@ export function SimulatorForm({ tenantId, vehicleId, vehicleName, vehiclePrice }
       <div className="rounded-xl bg-white/[0.03] border border-white/5 p-4 flex flex-col gap-2">
         {[
           { label: 'Valor financiado', value: fmt(financed) },
-          { label: 'Taxa de juros',    value: `${rate.toFixed(2)}% a.m.` },
           { label: 'Prazo',            value: `${months} meses` },
+          { label: 'Total estimado',   value: fmt(total) },
         ].map(({ label, value }) => (
           <div key={label} className="flex justify-between">
             <span className="font-body text-xs text-white/40">{label}</span>
