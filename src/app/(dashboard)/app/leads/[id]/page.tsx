@@ -140,7 +140,15 @@ export default async function LeadDetailPage({
         </a>
 
         {waSession.data?.status === 'connected' && (
-          <WASend leadId={lead.id} phone={lead.phone} />
+          <WASend
+            leadId={lead.id}
+            phone={lead.phone}
+            leadName={lead.name}
+            vehicleName={lead.vehicles
+              ? `${lead.vehicles.brand} ${lead.vehicles.model}${lead.vehicles.year_model ? ' ' + lead.vehicles.year_model : ''}`
+              : undefined}
+            stage={lead.stage}
+          />
         )}
 
         {lead.email && (

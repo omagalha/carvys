@@ -4,6 +4,7 @@ import { User, Store, Globe, LogOut, CreditCard, ArrowRight } from 'lucide-react
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getUserTenants } from '@/server/queries/tenants'
+import { whatsappInstanceName } from '@/server/whatsapp-instance'
 import { logout } from '@/server/actions/auth'
 import { ProfileForm } from './profile-form'
 import { TenantForm } from './tenant-form'
@@ -21,11 +22,16 @@ export default async function SettingsPage() {
 
   const tenant = memberships[0].tenants
   const admin  = createAdminClient()
+  const expectedWhatsappInstance = whatsappInstanceName(tenant.id)
 
   const [{ data: profile }, { data: waSession }] = await Promise.all([
     supabase.from('profiles').select('full_name, phone').eq('id', user.id).single(),
-    admin.from('whatsapp_sessions').select('status, phone_number').eq('tenant_id', tenant.id).maybeSingle(),
+    admin.from('whatsapp_sessions').select('status, phone_number, instance_name').eq('tenant_id', tenant.id).maybeSingle(),
   ])
+
+  const isWhatsappConnected =
+    waSession?.status === 'connected' &&
+    waSession.instance_name === expectedWhatsappInstance
 
   const tenantPlan = tenant.plan_code ?? 'trial'
   const { data: membershipRows } = await admin
@@ -116,8 +122,8 @@ export default async function SettingsPage() {
 
       {/* WhatsApp */}
       <WhatsAppSection
-        initialStatus={waSession?.status === 'connected' ? 'connected' : 'disconnected'}
-        initialPhone={waSession?.phone_number}
+        initialStatus={isWhatsappConnected ? 'connected' : 'disconnected'}
+        initialPhone={isWhatsappConnected ? waSession.phone_number : null}
       />
 
       {/* Site da loja */}

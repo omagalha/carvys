@@ -4,14 +4,11 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getUserTenants } from '@/server/queries/tenants'
+import { whatsappInstanceName } from '@/server/whatsapp-instance'
 import * as evo from '@/lib/evolution'
 
-function instanceName(tenantId: string): string {
-  return 'carvys'
-}
-
 function webhookUrl(): string {
-  const base   = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? ''
   const secret = process.env.WHATSAPP_WEBHOOK_SECRET ?? ''
   return `${base}/api/webhooks/whatsapp?secret=${encodeURIComponent(secret)}`
 }
@@ -28,26 +25,24 @@ async function getTenantId(): Promise<string> {
 export async function connectWhatsApp(): Promise<{ qr: string | null; error?: string }> {
   try {
     const tenantId = await getTenantId()
-    const admin    = createAdminClient()
-    const name     = instanceName(tenantId)
+    const admin = createAdminClient()
+    const name = whatsappInstanceName(tenantId)
 
     await admin.from('whatsapp_sessions').upsert(
       { tenant_id: tenantId, instance_name: name, status: 'connecting' },
       { onConflict: 'tenant_id' },
     )
 
+    let qr: string | null = null
+
     try {
-      await evo.createInstance(name, webhookUrl())
+      qr = await evo.createInstance(name, webhookUrl())
     } catch (e) {
       console.error('[whatsapp] createInstance error:', e)
-      // Instance may already exist — continue
+      // Instance may already exist; continue and ask Evolution for the QR.
     }
 
-    // Small delay for Evolution API to generate QR
-    await new Promise(r => setTimeout(r, 1000))
-
-    const qr = await evo.getQRCode(name)
-    return { qr }
+    return { qr: qr ?? await evo.waitForQRCode(name) }
   } catch (e) {
     return { qr: null, error: String(e) }
   }
@@ -60,17 +55,17 @@ export async function checkWhatsAppStatus(): Promise<{
 }> {
   try {
     const tenantId = await getTenantId()
-    const name     = instanceName(tenantId)
-    const state    = await evo.getConnectionState(name)
+    const name = whatsappInstanceName(tenantId)
+    const state = await evo.getConnectionState(name)
 
     if (state === 'open') {
       const phone = await evo.getOwnerPhone(name)
       const admin = createAdminClient()
       await admin.from('whatsapp_sessions').upsert(
         {
-          tenant_id:    tenantId,
+          tenant_id: tenantId,
           instance_name: name,
-          status:       'connected',
+          status: 'connected',
           phone_number: phone ?? null,
           connected_at: new Date().toISOString(),
         },
@@ -80,8 +75,7 @@ export async function checkWhatsAppStatus(): Promise<{
       return { status: 'connected', phone: phone ?? undefined }
     }
 
-    // Try QR for both 'connecting' and 'close' — instance may still be initializing
-    const qr = await evo.getQRCode(name)
+    const qr = await evo.waitForQRCode(name, 2, 1000)
     if (qr) return { status: 'connecting', qr }
 
     return { status: state === 'connecting' ? 'connecting' : 'disconnected' }
@@ -92,8 +86,8 @@ export async function checkWhatsAppStatus(): Promise<{
 
 export async function disconnectWhatsApp(): Promise<void> {
   const tenantId = await getTenantId()
-  const admin    = createAdminClient()
-  const name     = instanceName(tenantId)
+  const admin = createAdminClient()
+  const name = whatsappInstanceName(tenantId)
 
   try { await evo.deleteInstance(name) } catch { /* ignore */ }
 
@@ -108,15 +102,15 @@ export async function sendWhatsAppMessage(
 ): Promise<{ error?: string }> {
   try {
     const tenantId = await getTenantId()
-    const name     = instanceName(tenantId)
+    const name = whatsappInstanceName(tenantId)
 
     await evo.sendTextMessage(name, phone, text)
 
     const admin = createAdminClient()
     await admin.from('lead_events').insert({
-      tenant_id:   tenantId,
-      lead_id:     leadId,
-      type:        'whatsapp_out',
+      tenant_id: tenantId,
+      lead_id: leadId,
+      type: 'whatsapp_out',
       description: text,
     })
 

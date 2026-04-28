@@ -14,8 +14,22 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json()
 }
 
-export async function createInstance(name: string, webhookUrl: string): Promise<void> {
-  await req('/instance/create', {
+function qrFromResponse(data: {
+  base64?: string
+  code?: string
+  qrcode?: { base64?: string; code?: string }
+}): string | null {
+  const raw = data.base64 ?? data.qrcode?.base64 ?? null
+  if (!raw) return null
+  return raw.startsWith('data:') ? raw : `data:image/png;base64,${raw}`
+}
+
+export async function createInstance(name: string, webhookUrl: string): Promise<string | null> {
+  const data = await req<{
+    base64?: string
+    code?: string
+    qrcode?: { base64?: string; code?: string }
+  }>('/instance/create', {
     method: 'POST',
     body: JSON.stringify({
       instanceName: name,
@@ -30,6 +44,7 @@ export async function createInstance(name: string, webhookUrl: string): Promise<
       },
     }),
   })
+  return qrFromResponse(data)
 }
 
 export async function getQRCode(name: string): Promise<string | null> {
@@ -40,13 +55,22 @@ export async function getQRCode(name: string): Promise<string | null> {
       qrcode?: { base64?: string; code?: string }
       pairingCode?: string | null
     }>(`/instance/connect/${name}`)
-    const raw = data.base64 ?? data.qrcode?.base64 ?? null
-    if (!raw) return null
-    return raw.startsWith('data:') ? raw : `data:image/png;base64,${raw}`
+    return qrFromResponse(data)
   } catch (e) {
     console.error('[evolution] getQRCode error:', e)
     return null
   }
+}
+
+export async function waitForQRCode(name: string, attempts = 6, delayMs = 1500): Promise<string | null> {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const qr = await getQRCode(name)
+    if (qr) return qr
+    if (attempt < attempts - 1) {
+      await new Promise(resolve => setTimeout(resolve, delayMs))
+    }
+  }
+  return null
 }
 
 export async function getConnectionState(name: string): Promise<'open' | 'connecting' | 'close'> {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendTextMessage } from '@/lib/evolution'
 
 type EvolutionPayload = {
   event:    string
@@ -21,6 +22,18 @@ function normalizePhone(jid: string): string {
   return jid.replace('@s.whatsapp.net', '').replace(/\D/g, '').slice(-11)
 }
 
+function buildAutoReply(
+  name: string,
+  vehicle: { brand: string; model: string; year_model?: number | null } | null,
+): string {
+  const first = name.split(' ')[0]
+  if (vehicle) {
+    const vName = `${vehicle.brand} ${vehicle.model}${vehicle.year_model ? ' ' + vehicle.year_model : ''}`
+    return `Olá ${first}! Vi que você se interessou pelo ${vName}. Ele ainda está disponível! Posso te enviar mais detalhes ou fazer uma simulação de financiamento? 😊`
+  }
+  return `Olá ${first}! Obrigado pelo contato. Como posso te ajudar hoje? 😊`
+}
+
 export async function POST(req: NextRequest) {
   const secret = req.nextUrl.searchParams.get('secret')
   if (!secret || secret !== process.env.WHATSAPP_WEBHOOK_SECRET) {
@@ -40,7 +53,6 @@ export async function POST(req: NextRequest) {
 
   const { remoteJid, fromMe } = body.data.key
 
-  // Skip group messages
   if (remoteJid.endsWith('@g.us')) return NextResponse.json({ ok: true })
 
   const text =
@@ -49,8 +61,8 @@ export async function POST(req: NextRequest) {
 
   if (!text) return NextResponse.json({ ok: true })
 
-  const admin  = createAdminClient()
-  const phone  = normalizePhone(remoteJid)
+  const admin = createAdminClient()
+  const phone = normalizePhone(remoteJid)
 
   const { data: session } = await admin
     .from('whatsapp_sessions')
@@ -74,12 +86,49 @@ export async function POST(req: NextRequest) {
 
   if (!lead) return NextResponse.json({ ok: true })
 
+  // Check if first inbound before logging
+  let isFirstInbound = false
+  if (!fromMe) {
+    const { count } = await admin
+      .from('lead_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('lead_id', lead.id)
+      .eq('type', 'whatsapp_in')
+    isFirstInbound = count === 0
+  }
+
   await admin.from('lead_events').insert({
     tenant_id,
     lead_id:     lead.id,
     type:        fromMe ? 'whatsapp_out' : 'whatsapp_in',
     description: text,
   })
+
+  if (isFirstInbound) {
+    try {
+      const { data: detail } = await admin
+        .from('leads')
+        .select('name, vehicles(brand, model, year_model)')
+        .eq('id', lead.id)
+        .single()
+
+      if (detail) {
+        const raw = detail.vehicles
+        const vehicle = Array.isArray(raw) ? (raw[0] ?? null) : (raw ?? null)
+        const reply = buildAutoReply(detail.name, vehicle)
+
+        await sendTextMessage(body.instance, phone, reply)
+        await admin.from('lead_events').insert({
+          tenant_id,
+          lead_id:     lead.id,
+          type:        'whatsapp_out',
+          description: `[Auto] ${reply}`,
+        })
+      }
+    } catch (e) {
+      console.error('[webhook] auto-reply error:', e)
+    }
+  }
 
   return NextResponse.json({ ok: true })
 }
