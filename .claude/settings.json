@@ -36,6 +36,9 @@
       "WebFetch(domain:github.com)",
       "WebSearch",
       "Bash(git commit *)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Thales Magalhães\\OneDrive\\Desktop\\carvys"
     ]
   }
 }

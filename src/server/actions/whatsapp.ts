@@ -7,7 +7,7 @@ import { getUserTenants } from '@/server/queries/tenants'
 import * as evo from '@/lib/evolution'
 
 function instanceName(tenantId: string): string {
-  return `carvys-${tenantId.replace(/-/g, '').slice(0, 12)}`
+  return 'carvys'
 }
 
 function webhookUrl(): string {

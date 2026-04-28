@@ -64,7 +64,8 @@ export async function getConnectionState(name: string): Promise<'open' | 'connec
 export async function getOwnerPhone(name: string): Promise<string | null> {
   try {
     const data = await req<unknown>(`/instance/fetchInstances?instanceName=${name}`)
-    const list = Array.isArray(data) ? data : [data]
+    const response = data as { value?: unknown[] }
+    const list = Array.isArray(data) ? data : Array.isArray(response.value) ? response.value : [data]
     const found = list[0] as { instance?: { ownerJid?: string }; ownerJid?: string } | undefined
     const jid = found?.instance?.ownerJid ?? found?.ownerJid ?? null
     return jid?.replace('@s.whatsapp.net', '') ?? null
