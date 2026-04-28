@@ -91,6 +91,19 @@ export async function getOwnerPhone(name: string): Promise<string | null> {
   }
 }
 
+export async function setWebhook(name: string, url: string): Promise<void> {
+  await req(`/webhook/set/${name}`, {
+    method: 'POST',
+    body: JSON.stringify({
+      enabled: true,
+      url,
+      events: ['MESSAGES_UPSERT'],
+      webhook_by_events: false,
+      webhook_base64: false,
+    }),
+  })
+}
+
 export async function deleteInstance(name: string): Promise<void> {
   await req(`/instance/delete/${name}`, { method: 'DELETE' })
 }

@@ -7,6 +7,12 @@ import { getUserTenants } from '@/server/queries/tenants'
 import { whatsappInstanceName } from '@/server/whatsapp-instance'
 import * as evo from '@/lib/evolution'
 
+function webhookUrl(): string {
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const secret = process.env.WHATSAPP_WEBHOOK_SECRET ?? ''
+  return `${base}/api/webhooks/whatsapp?secret=${encodeURIComponent(secret)}`
+}
+
 async function getTenantId(): Promise<string> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -68,6 +74,11 @@ export async function checkWhatsAppStatus(): Promise<{
     if (state === 'open') {
       const phone = await evo.getOwnerPhone(name)
       const admin = createAdminClient()
+      try {
+        await evo.setWebhook(name, webhookUrl())
+      } catch (e) {
+        console.error('[whatsapp] setWebhook error:', e)
+      }
       await admin.from('whatsapp_sessions').upsert(
         {
           tenant_id: tenantId,
