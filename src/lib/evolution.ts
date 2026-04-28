@@ -24,7 +24,7 @@ function qrFromResponse(data: {
   return raw.startsWith('data:') ? raw : `data:image/png;base64,${raw}`
 }
 
-export async function createInstance(name: string, webhookUrl: string): Promise<string | null> {
+export async function createInstance(name: string): Promise<string | null> {
   const data = await req<{
     base64?: string
     code?: string
@@ -35,13 +35,6 @@ export async function createInstance(name: string, webhookUrl: string): Promise<
       instanceName: name,
       qrcode:       true,
       integration:  'WHATSAPP-BAILEYS',
-      webhook: {
-        enabled:          true,
-        url:              webhookUrl,
-        events:           ['MESSAGES_UPSERT'],
-        webhookBase64:    false,
-        webhookByEvents:  false,
-      },
     }),
   })
   return qrFromResponse(data)

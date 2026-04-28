@@ -7,12 +7,6 @@ import { getUserTenants } from '@/server/queries/tenants'
 import { whatsappInstanceName } from '@/server/whatsapp-instance'
 import * as evo from '@/lib/evolution'
 
-function webhookUrl(): string {
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? ''
-  const secret = process.env.WHATSAPP_WEBHOOK_SECRET ?? ''
-  return `${base}/api/webhooks/whatsapp?secret=${encodeURIComponent(secret)}`
-}
-
 async function getTenantId(): Promise<string> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -37,7 +31,7 @@ export async function connectWhatsApp(): Promise<{ qr: string | null; error?: st
     let createError: string | null = null
 
     try {
-      qr = await evo.createInstance(name, webhookUrl())
+      qr = await evo.createInstance(name)
     } catch (e) {
       console.error('[whatsapp] createInstance error:', e)
       createError = e instanceof Error ? e.message : String(e)
