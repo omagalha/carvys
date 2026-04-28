@@ -27,6 +27,11 @@ export function WhatsAppSection({
     }
     if (result.status === 'connecting' && result.qr) {
       setQr(result.qr)
+      return
+    }
+    if (result.status === 'disconnected') {
+      setError('Nao foi possivel carregar o QR Code. Tente conectar novamente.')
+      setPhase('idle')
     }
   }, [])
 
@@ -42,6 +47,11 @@ export function WhatsAppSection({
     const result = await connectWhatsApp()
     if (result.error) {
       setError(result.error)
+      setPhase('idle')
+      return
+    }
+    if (!result.qr) {
+      setError('Nao foi possivel gerar o QR Code. Tente novamente.')
       setPhase('idle')
       return
     }

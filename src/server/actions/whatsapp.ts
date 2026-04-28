@@ -34,15 +34,28 @@ export async function connectWhatsApp(): Promise<{ qr: string | null; error?: st
     )
 
     let qr: string | null = null
+    let createError: string | null = null
 
     try {
       qr = await evo.createInstance(name, webhookUrl())
     } catch (e) {
       console.error('[whatsapp] createInstance error:', e)
+      createError = e instanceof Error ? e.message : String(e)
       // Instance may already exist; continue and ask Evolution for the QR.
     }
 
-    return { qr: qr ?? await evo.waitForQRCode(name) }
+    qr = qr ?? await evo.waitForQRCode(name)
+    if (qr) return { qr }
+
+    const state = await evo.getConnectionState(name)
+    if (state === 'open') return { qr: null }
+
+    return {
+      qr: null,
+      error: createError
+        ? `Nao foi possivel gerar o QR Code. Evolution: ${createError}`
+        : 'Nao foi possivel gerar o QR Code. Tente novamente em alguns segundos.',
+    }
   } catch (e) {
     return { qr: null, error: String(e) }
   }
