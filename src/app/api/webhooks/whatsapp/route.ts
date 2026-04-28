@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
 
   const { data: leads } = await admin
     .from('leads')
-    .select('id, phone')
+    .select('id, phone, stage')
     .eq('tenant_id', tenant_id)
 
   const lead = (leads ?? []).find(l => {
@@ -103,6 +103,27 @@ export async function POST(req: NextRequest) {
     type:        fromMe ? 'whatsapp_out' : 'whatsapp_in',
     description: text,
   })
+
+  if (fromMe) {
+    const advanceStage = lead.stage === 'new'
+    await admin
+      .from('leads')
+      .update({
+        last_contact_at: new Date().toISOString(),
+        ...(advanceStage ? { stage: 'contacted' } : {}),
+      })
+      .eq('id', lead.id)
+      .eq('tenant_id', tenant_id)
+
+    if (advanceStage) {
+      await admin.from('lead_events').insert({
+        tenant_id,
+        lead_id:     lead.id,
+        type:        'stage_change',
+        description: 'Movido para Contatado',
+      })
+    }
+  }
 
   if (isFirstInbound) {
     try {
