@@ -97,3 +97,47 @@ export async function sendTeamInvite({
     html: body,
   })
 }
+
+export async function sendFeedbackEmail({
+  tenantName,
+  submitterName,
+  submitterEmail,
+  title,
+  description,
+}: {
+  tenantName: string
+  submitterName: string | null
+  submitterEmail: string | null
+  title: string
+  description: string
+}) {
+  const body = `
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+      <div style="background:#C8F135;border-radius:8px;padding:4px 12px;display:inline-block;margin-bottom:20px">
+        <span style="font-weight:700;color:#000;font-size:13px">Carvys</span>
+      </div>
+      <h2 style="margin:0 0 8px;font-size:20px;color:#111">Nova sugestão de melhoria</h2>
+      <p style="margin:0 0 24px;color:#666;font-size:14px">Enviada por um cliente</p>
+
+      <div style="background:#f5f5f5;border-radius:10px;padding:20px;margin-bottom:24px">
+        <p style="margin:0 0 8px;font-size:14px"><strong>Loja:</strong> ${tenantName}</p>
+        ${submitterName ? `<p style="margin:0 0 8px;font-size:14px"><strong>Usuário:</strong> ${submitterName}</p>` : ''}
+        ${submitterEmail ? `<p style="margin:0 0 8px;font-size:14px"><strong>E-mail:</strong> ${submitterEmail}</p>` : ''}
+        <p style="margin:0 0 8px;font-size:14px"><strong>Título:</strong> ${title}</p>
+        <p style="margin:0;font-size:14px"><strong>Descrição:</strong><br/>${description}</p>
+      </div>
+
+      <a href="https://www.carvys.com.br/admin/sugestoes"
+         style="display:inline-block;background:#C8F135;color:#000;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none">
+        Ver no painel admin →
+      </a>
+    </div>
+  `
+
+  await resend.emails.send({
+    from: 'Carvys <notificacoes@carvys.com.br>',
+    to: 'usecarvys@gmail.com',
+    subject: `💡 Nova sugestão: ${title} — ${tenantName}`,
+    html: body,
+  })
+}

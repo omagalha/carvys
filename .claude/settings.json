@@ -35,7 +35,8 @@
       "WebFetch(domain:frappe.io)",
       "WebFetch(domain:github.com)",
       "WebSearch",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(xargs ls *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Thales Magalhães\\OneDrive\\Desktop\\carvys"

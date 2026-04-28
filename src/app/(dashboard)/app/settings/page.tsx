@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { User, Store, Globe, LogOut, CreditCard, ArrowRight } from 'lucide-react'
+import { User, Store, Globe, LogOut, CreditCard, ArrowRight, Lightbulb } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getUserTenants } from '@/server/queries/tenants'
@@ -11,6 +11,7 @@ import { TenantForm } from './tenant-form'
 import { StoreInfoForm } from './store-info-form'
 import { TeamSection, type TeamMember, type PendingInvite } from './team-section'
 import { WhatsAppSection } from './whatsapp-section'
+import { FeedbackForm } from './feedback-form'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -170,6 +171,18 @@ export default async function SettingsPage() {
             <ArrowRight size={13} />
           </Link>
         </div>
+      </section>
+
+      {/* Sugestões */}
+      <section className="flex flex-col gap-4 rounded-xl bg-deep border border-surface p-5">
+        <div className="flex items-center gap-2">
+          <Lightbulb size={16} className="text-green" />
+          <h2 className="font-body font-semibold text-white text-sm">Sugestões de melhoria</h2>
+        </div>
+        <p className="font-body text-xs text-slate -mt-2">
+          Tem alguma ideia ou funcionalidade que gostaria de ver no Carvys? Conta pra gente.
+        </p>
+        <FeedbackForm />
       </section>
 
       {/* Conta */}
