@@ -1,128 +1,189 @@
-# 🚀 Carvys
+# Carvys
 
-Sistema SaaS de automação comercial para negócios locais, com foco em geração, gestão e conversão de leads.
-
----
-
-## 🧠 Visão do Produto
-
-O **Carvys** é uma plataforma multi-tenant que permite empresas gerenciarem seus leads, acompanhar negociações e automatizar o processo de vendas.
-
-Criado para escalar operações comerciais com organização, velocidade e inteligência.
+SaaS B2B multi-tenant de gestão comercial para revendedores de veículos. CRM com pipeline de vendas, estoque, WhatsApp nativo, site público por loja e cobrança recorrente.
 
 ---
 
-## 🎯 Problema que resolve
+## Stack
 
-Negócios locais perdem vendas todos os dias por:
-- falta de controle de leads
-- ausência de follow-up
-- processos manuais no WhatsApp
-- desorganização comercial
-
----
-
-## 💡 Solução
-
-O Carvys centraliza:
-- 📥 Captura de leads
-- 💬 Integração com WhatsApp
-- 📊 Gestão de funil de vendas
-- 🔁 Follow-ups automatizados
-- 📈 Controle por empresa (multi-tenant)
+| Camada | Tecnologia |
+|--------|-----------|
+| Frontend | Next.js 15 (App Router) + React 19 + TypeScript |
+| Banco de dados | Supabase (PostgreSQL + Auth + RLS) |
+| Estilização | Tailwind CSS |
+| Validação | Zod |
+| WhatsApp | Evolution API v2 (self-hosted) |
+| Pagamentos | Asaas |
+| E-mail | Resend |
+| Hospedagem app | Vercel |
+| Hospedagem Evolution API | DigitalOcean (Docker) |
 
 ---
 
-## 🏗️ Arquitetura
+## Funcionalidades
 
-- Multi-tenant (isolamento por cliente)
-- Controle de acesso por papéis (admin/member)
-- Backend com regras seguras (RLS)
-- Integração com serviços externos (pagamento e WhatsApp)
+### CRM / Pipeline
+- Funil de vendas com etapas: Novo → Contatado → Negociando → Ganho / Perdido
+- Temperatura do lead (quente, morno, frio) baseada em última interação
+- Histórico de eventos (Timeline) por lead
+- Notas e observações
+- Veículo de interesse vinculado ao lead
+- Follow-ups agendados por canal (WhatsApp, ligação, e-mail, visita)
+- Captura automática de lead via site público
+
+### WhatsApp Nativo
+- Conexão via Evolution API (sem terceiros — número próprio da loja)
+- QR Code para vincular número na tela de configurações
+- Envio de mensagem direto do painel com sugestão contextualizada (nome + veículo + etapa)
+- Resposta automática na primeira mensagem recebida do lead
+- Histórico de mensagens registrado na Timeline do lead
+- Avanço automático de etapa ao enviar mensagem (Novo → Contatado)
+
+### Estoque
+- Cadastro de veículos com fotos, especificações e preço
+- Galeria de imagens
+- Vinculação de veículo ao lead de interesse
+
+### Site Público por Loja
+- URL pública: `carvys.com.br/loja/[slug]`
+- Vitrine de veículos com busca e filtros
+- Página individual por veículo
+- Captura de lead com nome + telefone antes de abrir WhatsApp
+- Geração automática de descrição do veículo
+
+### Financeiro
+- Registro de entradas e saídas
+- Relatórios financeiros por período
+
+### Relatórios
+- Visão geral de leads, conversão e desempenho
+
+### Equipe
+- Convite de membros por e-mail
+- Papéis: owner, admin, sales
+
+### Cobrança
+- Assinatura recorrente via Asaas
+- Webhook de pagamento (confirmação, atraso, cancelamento)
+- Planos: trial, pro, elite
+
+### Admin
+- Painel interno para gestão de todos os tenants
+- Controle de status e eventos de cada cliente
 
 ---
 
-## 🧰 Stack
+## Variáveis de Ambiente
 
-- Frontend: Next.js + React + TypeScript
-- Backend: Supabase (PostgreSQL + Auth + RLS)
-- Validação: Zod
-- Integrações:
-  - Asaas (pagamentos)
-  - Z-API (WhatsApp)
-
----
-
-## 📂 Estrutura do Projeto
-
-
-/app → rotas e páginas (Next.js)
-/components → componentes reutilizáveis
-/lib → utilitários e integrações
-/supabase → migrations e configuração do banco
-/docs → documentação de arquitetura
-
-
----
-
-## 🔐 Variáveis de Ambiente
-
-Crie um arquivo `.env.local` baseado em:
+Crie `.env.local` na raiz:
 
 ```env
+# Supabase
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 
+# WhatsApp (Evolution API)
+EVOLUTION_API_URL=https://wa.carvys.com.br
+EVOLUTION_API_KEY=
+WHATSAPP_WEBHOOK_SECRET=
+
+# App
+NEXT_PUBLIC_APP_URL=https://carvys.com.br
+
+# Pagamentos
+ASAAS_ENV=production
 ASAAS_API_KEY=
-ZAPI_INSTANCE_ID=
-ZAPI_TOKEN=
+ASAAS_WEBHOOK_TOKEN=
 
-▶️ Como rodar o projeto
-# instalar dependências
-npm install
-
-# rodar ambiente de desenvolvimento
-npm run dev
-
-Acesse:
-http://localhost:3000
-
-📌 Funcionalidades (MVP)
- Autenticação de usuários
- Multi-tenant (empresas)
- Gestão de leads
- Follow-ups
- Integração com WhatsApp
- Dashboard analítico
- Automações avançadas
- Sistema de planos e cobrança
-
-🧱 Roadmap
-Painel de métricas comerciais
-Automação de mensagens
-Inteligência de conversão (IA)
-CRM visual (pipeline)
-Integração com múltiplos canais
-💼 Modelo de Negócio
-
-SaaS por assinatura:
-
-Plano base mensal
-Upsell por automações
-White-label para parceiros
-📈 Objetivo
-
-Transformar o Carvys em uma plataforma completa de automação comercial para pequenas e médias empresas.
-
-
-📩 Contato
-
-📧 contato@carvys.com.br
-
-⚠️ Status
-
-🚧 Em desenvolvimento ativo
-
+# E-mail
+RESEND_API_KEY=
+```
 
 ---
+
+## Rodar localmente
+
+```bash
+npm install
+npm run dev
+```
+
+Acesse `http://localhost:3000`
+
+```bash
+npm run typecheck   # verificar tipos
+npm run build       # build de produção
+```
+
+---
+
+## Estrutura de Pastas
+
+```
+src/
+├── app/
+│   ├── (auth)/           # login, cadastro, callback
+│   ├── (onboarding)/     # fluxo de onboarding do tenant
+│   ├── (dashboard)/      # app protegido
+│   │   └── app/
+│   │       ├── leads/        # pipeline + detalhe do lead
+│   │       ├── vehicles/     # estoque
+│   │       ├── follow-ups/   # follow-ups
+│   │       ├── financeiro/   # financeiro
+│   │       ├── relatorios/   # relatórios
+│   │       ├── contatos/     # contatos
+│   │       └── settings/     # configurações (perfil, loja, equipe, WhatsApp, plano)
+│   ├── (admin)/          # painel interno Carvys
+│   ├── loja/             # site público por loja
+│   │   └── [slug]/
+│   │       └── [vehicleId]/
+│   └── api/
+│       └── webhooks/
+│           ├── whatsapp/ # recebe eventos da Evolution API
+│           └── asaas/    # recebe eventos de pagamento
+├── lib/
+│   ├── supabase/         # cliente server/browser/admin
+│   ├── evolution.ts      # integração Evolution API
+│   ├── asaas.ts          # integração Asaas
+│   ├── email.ts          # envio de e-mail (Resend)
+│   ├── plans.ts          # definição de planos
+│   └── temperature.ts    # lógica de temperatura do lead
+└── server/
+    ├── actions/          # server actions (mutations)
+    └── queries/          # queries de leitura
+```
+
+---
+
+## Infraestrutura Evolution API
+
+A Evolution API roda em Docker no DigitalOcean:
+
+```yaml
+# docker-compose.yml (resumido)
+services:
+  postgres:    # banco da Evolution API
+  redis:       # cache de sessão
+  evolution:   # atendai/evolution-api:v2.1.1 na porta 8080
+```
+
+Domínio: `wa.carvys.com.br` → servidor DigitalOcean (porta 8080)
+
+Cada tenant gera uma instância isolada com nome `carvys-{tenantIdSlice}`.
+
+---
+
+## Multi-tenant
+
+- Cada loja é um **tenant** isolado com RLS no Supabase
+- Papéis: `owner`, `admin`, `sales`
+- Instância WhatsApp separada por tenant
+- Site público com slug próprio
+- Plano e cobrança independentes
+
+---
+
+## Status
+
+Produção ativa em `carvys.com.br`

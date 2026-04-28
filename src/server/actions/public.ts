@@ -113,3 +113,109 @@ export async function createPublicLead(
 
   return { error: '', success: true }
 }
+
+type SimulationLeadInput = {
+  tenantId:     string
+  vehicleId:    string
+  vehicleName:  string
+  name:         string
+  phone:        string
+  cpf:          string
+  birthDate:    string
+  entry:        number
+  rate:         number
+  months:       number
+  installment:  number
+  total:        number
+  vehiclePrice: number
+}
+
+export async function createSimulationLead(
+  input: SimulationLeadInput,
+): Promise<{ error: string }> {
+  const { tenantId, vehicleId, vehicleName, name, phone, cpf, birthDate,
+          entry, rate, months, installment, total, vehiclePrice } = input
+
+  if (!name.trim())                              return { error: 'Nome obrigatório.' }
+  if (phone.replace(/\D/g, '').length < 10)     return { error: 'WhatsApp inválido.' }
+  if (cpf.replace(/\D/g, '').length !== 11)     return { error: 'CPF inválido.' }
+  if (!birthDate)                                return { error: 'Data de nascimento obrigatória.' }
+
+  const normalizedPhone = phone.replace(/\D/g, '')
+  const admin = createAdminClient()
+
+  const simulationData = { entry, rate, months, installment, total, vehicle_price: vehiclePrice }
+
+  // Deduplicação por telefone
+  const { data: existing } = await admin
+    .from('leads')
+    .select('id')
+    .eq('tenant_id', tenantId)
+    .eq('phone', normalizedPhone)
+    .limit(1)
+    .maybeSingle()
+
+  if (existing) {
+    await admin.from('leads')
+      .update({
+        interest_vehicle_id: vehicleId,
+        cpf:                 cpf.replace(/\D/g, ''),
+        birth_date:          birthDate,
+        simulation_data:     simulationData,
+        stage:               'new',
+        updated_at:          new Date().toISOString(),
+      })
+      .eq('id', existing.id)
+
+    await admin.from('lead_events').insert({
+      tenant_id:   tenantId,
+      lead_id:     existing.id,
+      type:        'note',
+      description: `Nova simulação via site: ${vehicleName} — ${months}x de R$${installment.toLocaleString('pt-BR')}`,
+    })
+
+    return { error: '' }
+  }
+
+  const { data: lead, error } = await admin.from('leads').insert({
+    tenant_id:           tenantId,
+    name:                name.trim(),
+    phone:               normalizedPhone,
+    cpf:                 cpf.replace(/\D/g, ''),
+    birth_date:          birthDate,
+    stage:               'new',
+    source:              'simulacao',
+    interest_vehicle_id: vehicleId,
+    simulation_data:     simulationData,
+  }).select('id').single()
+
+  if (error || !lead) return { error: 'Erro ao registrar. Tente novamente.' }
+
+  await admin.from('lead_events').insert({
+    tenant_id:   tenantId,
+    lead_id:     lead.id,
+    type:        'note',
+    description: `Simulação via site: ${vehicleName} — ${months}x de R$${installment.toLocaleString('pt-BR')} (entrada R$${entry.toLocaleString('pt-BR')})`,
+  })
+
+  // Notifica donos por e-mail
+  const { data: tenantData } = await admin.from('tenants').select('name').eq('id', tenantId).single()
+  if (tenantData) {
+    const { data: members } = await admin
+      .from('tenant_memberships').select('user_id')
+      .eq('tenant_id', tenantId).eq('status', 'active').in('role', ['owner', 'admin'])
+
+    if (members?.length) {
+      const { data: profiles } = await admin.from('profiles').select('id').in('id', members.map(m => m.user_id))
+      const { data: users } = await admin.auth.admin.listUsers()
+      const emails = users.users.filter(u => profiles?.some(p => p.id === u.id) && u.email).map(u => u.email!)
+      await Promise.allSettled(
+        emails.map(email =>
+          sendLeadNotification({ to: email, tenantName: tenantData.name, leadName: name.trim(), leadPhone: normalizedPhone, vehicleName })
+        )
+      )
+    }
+  }
+
+  return { error: '' }
+}

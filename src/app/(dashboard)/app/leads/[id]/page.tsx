@@ -15,6 +15,7 @@ import { LeadEditor } from './lead-editor'
 import { VehicleSelector } from './vehicle-selector'
 import { LogContact } from './log-contact'
 import { WASend } from './wa-send'
+import { SimulationView } from './simulation-view'
 import { calcTemperature, TEMP_CONFIG } from '@/lib/temperature'
 import { getLeadEvents } from '@/server/queries/lead-events'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -201,6 +202,20 @@ export default async function LeadDetailPage({
           vehicles={vehicles.map(v => ({ id: v.id, brand: v.brand, model: v.model, year_model: v.year_model }))}
         />
       </section>
+
+      {/* Simulação de Financiamento */}
+      {(lead as any).simulation_data && (
+        <SimulationView
+          leadId={lead.id}
+          leadName={lead.name}
+          phone={lead.phone}
+          vehicleName={lead.vehicles
+            ? `${lead.vehicles.brand} ${lead.vehicles.model}${lead.vehicles.year_model ? ' ' + lead.vehicles.year_model : ''}`
+            : undefined}
+          simulation={(lead as any).simulation_data}
+          waConnected={waSession.data?.status === 'connected'}
+        />
+      )}
 
       {/* Notas */}
       <section className="flex flex-col gap-3 rounded-xl bg-deep border border-surface p-5">

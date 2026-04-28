@@ -5,6 +5,7 @@ import { getTenantBySlug, getPublicVehicle } from '@/server/queries/public'
 import { LeadModal } from '@/app/loja/_components/lead-modal'
 import { GalleryViewer } from '@/app/loja/_components/gallery-viewer'
 import { ContactSection } from '@/app/loja/_components/contact-section'
+import { SimulatorForm } from '@/app/loja/_components/simulator-form'
 import type { Vehicle } from '@/server/queries/vehicles'
 
 const PLANS_WITH_SITE = ['trial', 'pro', 'elite']
@@ -232,6 +233,19 @@ export default async function VehiclePublicPage({
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Simulador de Financiamento */}
+        <div className="flex flex-col gap-4">
+          <p className="font-body text-[10px] text-white/25 uppercase tracking-widest border-b border-white/5 pb-3">
+            Simulador de Financiamento
+          </p>
+          <SimulatorForm
+            tenantId={tenant.id}
+            vehicleId={vehicle.id}
+            vehicleName={vehicleName}
+            vehiclePrice={vehicle.price}
+          />
         </div>
 
         {/* Contato & Localização */}
