@@ -93,7 +93,7 @@ function LeadCard({
 
       <Link href={`/app/leads/${lead.id}`} className="absolute inset-0 z-0 rounded-xl" />
 
-      <div className="relative z-10 flex flex-col gap-3 p-4">
+      <div className="relative z-10 flex flex-col gap-3 p-4 pointer-events-none">
         <div className="flex items-start gap-2.5 min-w-0 pr-6">
           <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-body text-xs font-bold ${
             urgent ? 'bg-alert/20 text-alert' : 'bg-surface text-slate'
@@ -149,7 +149,7 @@ function LeadCard({
               href={`https://wa.me/55${waPhone}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="relative z-20 flex h-6 w-6 items-center justify-center rounded-md bg-green/10 hover:bg-green/25 transition-colors shrink-0"
+              className="relative z-20 pointer-events-auto flex h-6 w-6 items-center justify-center rounded-md bg-green/10 hover:bg-green/25 transition-colors shrink-0"
             >
               <MessageCircle size={11} className="text-green" />
             </a>
