@@ -89,6 +89,40 @@ export async function extendTrial(tenantId: string): Promise<AdminActionState> {
   return { error: '', success: true }
 }
 
+export async function sendWhatsAppToTenantOwner(
+  tenantId: string,
+  message: string,
+): Promise<AdminActionState> {
+  try { await guardAdmin() } catch { return { error: 'Sem permissão.' } }
+  if (!message.trim()) return { error: 'Mensagem não pode estar vazia.' }
+
+  const admin = createAdminClient()
+  const { data: m } = await admin
+    .from('tenant_memberships')
+    .select('user_id')
+    .eq('tenant_id', tenantId)
+    .eq('role', 'owner')
+    .single()
+
+  if (!m) return { error: 'Dono não encontrado.' }
+
+  const { data: p } = await admin
+    .from('profiles')
+    .select('phone')
+    .eq('id', m.user_id)
+    .single()
+
+  if (!p?.phone) return { error: 'Dono sem telefone cadastrado.' }
+
+  try {
+    await sendOfficialPlatformWhatsApp(p.phone, message)
+  } catch {
+    return { error: 'Falha ao enviar mensagem.' }
+  }
+
+  return { error: '', success: true }
+}
+
 export async function sendAdminWhatsApp(formData: FormData): Promise<AdminActionState> {
   try { await guardAdmin() } catch { return { error: 'Sem permissão.' } }
 

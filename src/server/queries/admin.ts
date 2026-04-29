@@ -8,11 +8,20 @@ export type AdminTenant = {
   plan_code: string
   status: string
   created_at: string
+  asaas_customer_id: string | null
   owner: { full_name: string | null; phone: string | null; email: string | null; last_sign_in_at: string | null } | null
   member_count: number
   vehicle_count: number
   lead_count: number
   whatsapp_connected: boolean
+}
+
+export type Alerts = {
+  trialsExpiringSoon: AdminTenant[]
+  noWhatsApp: AdminTenant[]
+  noVehicles: AdminTenant[]
+  pastDue: AdminTenant[]
+  activeInactive: AdminTenant[]
 }
 
 export type GlobalEvent = {
@@ -41,7 +50,7 @@ export async function getAllTenants(): Promise<AdminTenant[]> {
 
   const { data: tenants } = await admin
     .from('tenants')
-    .select('id, name, slug, plan_code, status, created_at')
+    .select('id, name, slug, plan_code, status, created_at, asaas_customer_id')
     .order('created_at', { ascending: false })
 
   if (!tenants) return []
@@ -77,6 +86,7 @@ export async function getAllTenants(): Promise<AdminTenant[]> {
 
       return {
         ...t,
+        asaas_customer_id: (t as { asaas_customer_id?: string | null }).asaas_customer_id ?? null,
         owner,
         member_count: membersRes.data?.length ?? 0,
         vehicle_count: vehiclesRes.count ?? 0,
@@ -163,4 +173,31 @@ export async function getActivationRadar(): Promise<ActivationTenant[]> {
   )
 
   return result
+}
+
+export async function getAlerts(): Promise<Alerts> {
+  const all = await getAllTenants()
+  const now = Date.now()
+  const dayMs = 24 * 60 * 60 * 1000
+
+  return {
+    trialsExpiringSoon: all.filter(t => {
+      if (t.status !== 'trial') return false
+      const expiresAt = new Date(t.created_at).getTime() + 7 * dayMs
+      return expiresAt - now <= dayMs
+    }),
+    noWhatsApp: all.filter(t =>
+      ['trial', 'active'].includes(t.status) && !t.whatsapp_connected
+    ),
+    noVehicles: all.filter(t =>
+      t.status === 'trial' && t.vehicle_count === 0
+    ),
+    pastDue: all.filter(t => t.status === 'past_due'),
+    activeInactive: all.filter(t => {
+      if (t.status !== 'active') return false
+      const lastLogin = t.owner?.last_sign_in_at
+      if (!lastLogin) return true
+      return now - new Date(lastLogin).getTime() > 7 * dayMs
+    }),
+  }
 }

@@ -4,7 +4,10 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getUserTenants } from '@/server/queries/tenants'
+import { sendLeadNotification } from '@/lib/email'
+import { sendOfficialPlatformWhatsApp } from '@/server/platform-whatsapp'
 
 const updateLeadSchema = z.object({
   name:  z.string().min(2, 'Nome muito curto').max(120),
@@ -73,7 +76,7 @@ export async function createLead(
   const memberships = await getUserTenants()
   if (memberships.length === 0) return { error: 'Nenhuma loja encontrada.' }
 
-  const tenant = memberships[0].tenants as { id: string }
+  const tenant = memberships[0].tenants as { id: string; name: string }
 
   const { data: lead, error } = await supabase
     .from('leads')
@@ -101,6 +104,15 @@ export async function createLead(
     type:        'created',
     description: 'Lead criado',
   })
+
+  try {
+    await notifyOwnerNewLead(
+      tenant.id,
+      tenant.name,
+      { name: parsed.data.name, phone: parsed.data.phone },
+      parsed.data.interest_vehicle_id || null,
+    )
+  } catch {}
 
   redirect('/app/leads')
 }
@@ -352,4 +364,56 @@ export async function updateLeadNotes(leadId: string, notes: string, hadNotesBef
   })
 
   revalidatePath(`/app/leads/${leadId}`)
+}
+
+async function notifyOwnerNewLead(
+  tenantId: string,
+  tenantName: string,
+  lead: { name: string; phone: string },
+  vehicleId: string | null,
+) {
+  const admin = createAdminClient()
+
+  let vehicleName: string | null = null
+  if (vehicleId) {
+    const { data: v } = await admin
+      .from('vehicles')
+      .select('brand, model, year_model')
+      .eq('id', vehicleId)
+      .single()
+    if (v) vehicleName = `${v.brand} ${v.model}${v.year_model ? ' ' + v.year_model : ''}`
+  }
+
+  const { data: membership } = await admin
+    .from('tenant_memberships')
+    .select('user_id')
+    .eq('tenant_id', tenantId)
+    .eq('role', 'owner')
+    .single()
+
+  if (!membership) return
+
+  const { data: { user: owner } } = await admin.auth.admin.getUserById(membership.user_id)
+  if (!owner?.email) return
+
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('phone')
+    .eq('id', membership.user_id)
+    .maybeSingle()
+
+  if (profile?.phone) {
+    const msg = vehicleName
+      ? `Novo lead! ${lead.name} se interessou por ${vehicleName}. Acesse o Carvys para entrar em contato.`
+      : `Novo lead! ${lead.name} entrou em contato com sua loja. Acesse o Carvys para responder.`
+    await sendOfficialPlatformWhatsApp(profile.phone, msg).catch(() => {})
+  }
+
+  await sendLeadNotification({
+    to: owner.email,
+    tenantName,
+    leadName: lead.name,
+    leadPhone: lead.phone,
+    vehicleName,
+  }).catch(() => {})
 }

@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Mail, Phone, Car, Users, Calendar, MessageCircle, FileText, Activity } from 'lucide-react'
+import { ArrowLeft, Mail, Phone, Car, Users, Calendar, MessageCircle, FileText, Activity, Zap, ShieldCheck } from 'lucide-react'
 import { getTenantById } from '@/server/queries/admin'
-import { getTenantNotes, getTenantEvents } from '@/server/queries/admin-notes'
+import { getTenantNotes, getTenantEvents, getTenantPlatformMessages, platformMsgLabel } from '@/server/queries/admin-notes'
 import { TenantControls } from './tenant-controls'
+import { TenantQuickActions } from './tenant-quick-actions'
 import { NotesForm } from './notes-form'
 
 function formatDate(iso: string) {
@@ -26,9 +27,11 @@ const WELCOME_MSG = (name: string) =>
   )
 
 const EVENT_ICON: Record<string, string> = {
-  created:        '🟢',
-  status_changed: '🔄',
-  plan_changed:   '💳',
+  created:          '🟢',
+  status_changed:   '🔄',
+  plan_changed:     '💳',
+  payment:          '💰',
+  platform_message: '📨',
 }
 
 export default async function ClienteDetailPage({
@@ -37,12 +40,24 @@ export default async function ClienteDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const [tenant, notes, events] = await Promise.all([
+  const [tenant, notes, events, platformMessages] = await Promise.all([
     getTenantById(id),
     getTenantNotes(id),
     getTenantEvents(id),
+    getTenantPlatformMessages(id),
   ])
   if (!tenant) notFound()
+
+  // Merge events + platform messages into one sorted timeline
+  const timeline = [
+    ...events.map(e => ({ id: e.id, type: e.type, description: e.description, created_at: e.created_at })),
+    ...platformMessages.map(m => ({
+      id: m.id,
+      type: 'platform_message',
+      description: platformMsgLabel(m.type),
+      created_at: m.created_at,
+    })),
+  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
   const stats = [
     { label: 'Veículos cadastrados', value: tenant.vehicle_count, icon: Car },
@@ -147,6 +162,37 @@ export default async function ClienteDetailPage({
           <span className="font-body text-sm text-slate">Cliente desde</span>
           <span className="font-body text-sm text-white ml-auto">{formatDate(tenant.created_at)}</span>
         </div>
+        <div className="flex items-center gap-2">
+          <ShieldCheck size={14} className="text-slate" />
+          <span className="font-body text-sm text-slate">Status</span>
+          <span className={`font-body text-sm ml-auto font-semibold ${
+            tenant.status === 'active'   ? 'text-green' :
+            tenant.status === 'trial'    ? 'text-blue-400' :
+            tenant.status === 'past_due' ? 'text-alert' :
+            'text-slate'
+          }`}>{tenant.status}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <MessageCircle size={14} className="text-slate" />
+          <span className="font-body text-sm text-slate">WhatsApp</span>
+          <span className={`font-body text-sm ml-auto ${tenant.whatsapp_connected ? 'text-green' : 'text-slate'}`}>
+            {tenant.whatsapp_connected ? 'Conectado' : 'Desconectado'}
+          </span>
+        </div>
+      </section>
+
+      {/* Ações rápidas */}
+      <section className="flex flex-col gap-4 rounded-xl bg-deep border border-surface p-5">
+        <div className="flex items-center gap-2">
+          <Zap size={14} className="text-slate" />
+          <h2 className="font-body font-semibold text-white text-sm">Ações rápidas</h2>
+        </div>
+        <TenantQuickActions
+          tenantId={tenant.id}
+          slug={tenant.slug}
+          ownerPhone={tenant.owner?.phone ?? null}
+          asaasCustomerId={tenant.asaas_customer_id}
+        />
       </section>
 
       {/* Controles */}
@@ -184,34 +230,63 @@ export default async function ClienteDetailPage({
         )}
       </section>
 
-      {/* Timeline */}
+      {/* Timeline enriquecida */}
       <section className="flex flex-col gap-3 rounded-xl bg-deep border border-surface p-5">
         <div className="flex items-center gap-2">
           <Activity size={14} className="text-slate" />
           <h2 className="font-body font-semibold text-white text-sm">Timeline</h2>
         </div>
 
-        {events.length === 0 ? (
+        {timeline.length === 0 ? (
           <p className="font-body text-xs text-slate">Nenhum evento registrado.</p>
         ) : (
           <div className="flex flex-col gap-0">
-            {events.map((event, i) => (
-              <div key={event.id} className="flex gap-3">
+            {timeline.map((item, i) => (
+              <div key={item.id} className="flex gap-3">
                 <div className="flex flex-col items-center">
-                  <span className="text-sm leading-none mt-0.5">{EVENT_ICON[event.type] ?? '📌'}</span>
-                  {i < events.length - 1 && (
+                  <span className="text-sm leading-none mt-0.5">{EVENT_ICON[item.type] ?? '📌'}</span>
+                  {i < timeline.length - 1 && (
                     <div className="w-px flex-1 bg-surface mt-1 mb-1" />
                   )}
                 </div>
                 <div className="flex flex-col gap-0.5 pb-4">
-                  <p className="font-body text-sm text-white">{event.description}</p>
-                  <p className="font-body text-[10px] text-slate">{formatDateTime(event.created_at)}</p>
+                  <p className="font-body text-sm text-white">{item.description}</p>
+                  <p className="font-body text-[10px] text-slate">{formatDateTime(item.created_at)}</p>
                 </div>
               </div>
             ))}
           </div>
         )}
       </section>
+
+      {/* Log de mensagens automáticas */}
+      {platformMessages.length > 0 && (
+        <section className="flex flex-col gap-3 rounded-xl bg-deep border border-surface p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldCheck size={14} className="text-slate" />
+              <h2 className="font-body font-semibold text-white text-sm">Log anti-spam</h2>
+            </div>
+            <span className="font-body text-[10px] text-slate">{platformMessages.length} envio{platformMessages.length !== 1 ? 's' : ''}</span>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            {platformMessages.map(m => (
+              <div key={m.id} className="flex items-center justify-between rounded-lg bg-surface/50 px-3 py-2">
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-body text-xs text-white">{platformMsgLabel(m.type)}</span>
+                  {m.external_ref && m.external_ref !== '' && (
+                    <span className="font-body text-[10px] text-slate">ref: {m.external_ref}</span>
+                  )}
+                </div>
+                <span className="font-body text-[10px] text-slate shrink-0 ml-3">
+                  {formatDateTime(m.created_at)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

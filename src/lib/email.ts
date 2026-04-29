@@ -246,6 +246,58 @@ export async function sendPaymentOverdueEmail({
   })
 }
 
+export async function sendWeeklyReportEmail({
+  to,
+  tenantName,
+  newLeads,
+  whatsappSent,
+  vehiclesAdded,
+}: {
+  to: string
+  tenantName: string
+  newLeads: number
+  whatsappSent: number
+  vehiclesAdded: number
+}) {
+  const row = (label: string, value: number) => `
+    <tr>
+      <td style="padding:10px 0;font-size:14px;color:#444;border-bottom:1px solid #eee">${label}</td>
+      <td style="padding:10px 0;font-size:18px;font-weight:700;color:#111;text-align:right;border-bottom:1px solid #eee">${value}</td>
+    </tr>`
+
+  const body = `
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+      <div style="background:#C8F135;border-radius:8px;padding:4px 12px;display:inline-block;margin-bottom:20px">
+        <span style="font-weight:700;color:#000;font-size:13px">Carvys</span>
+      </div>
+      <h2 style="margin:0 0 4px;font-size:20px;color:#111">Resumo da semana</h2>
+      <p style="margin:0 0 24px;color:#666;font-size:14px">${tenantName}</p>
+
+      <table style="width:100%;border-collapse:collapse;margin-bottom:28px">
+        ${row('Leads novos', newLeads)}
+        ${row('Mensagens enviadas via WhatsApp', whatsappSent)}
+        ${row('Veículos cadastrados', vehiclesAdded)}
+      </table>
+
+      <a href="https://www.carvys.com.br/app/dashboard"
+         style="display:inline-block;background:#C8F135;color:#000;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none">
+        Ver painel →
+      </a>
+
+      <p style="margin-top:32px;font-size:11px;color:#999">
+        Você está recebendo este e-mail porque tem uma loja ativa na Carvys.
+      </p>
+    </div>
+  `
+
+  await resend.emails.send({
+    from: 'Carvys <notificacoes@carvys.com.br>',
+    to,
+    subject: `📊 Resumo da semana — ${tenantName}`,
+    html: body,
+  })
+}
+
 export async function sendFeedbackEmail({
   tenantName,
   submitterName,
