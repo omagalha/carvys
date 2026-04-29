@@ -1,6 +1,9 @@
 ﻿import Link from 'next/link'
 import { Reveal } from './_reveal'
 
+const CARVYS_WHATSAPP_URL =
+  'https://wa.me/5522997643573?text=Ola!%20Quero%20falar%20com%20a%20Carvys.'
+
 const CHECK = (
   <span style={{ width: 18, height: 18, background: 'rgba(200,241,53,0.12)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
     <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#C8F135" strokeWidth="2.5">
@@ -31,6 +34,7 @@ export default function HomePage() {
           <li><a href="#planos" style={{ color: '#888', textDecoration: 'none', fontSize: 14, fontWeight: 400 }}>Planos</a></li>
           <li><a href="#comparativo" style={{ color: '#888', textDecoration: 'none', fontSize: 14, fontWeight: 400 }}>Comparativo</a></li>
           <li><a href="#depoimentos" style={{ color: '#888', textDecoration: 'none', fontSize: 14, fontWeight: 400 }}>Depoimentos</a></li>
+          <li><a href={CARVYS_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" style={{ color: '#888', textDecoration: 'none', fontSize: 14, fontWeight: 400 }}>WhatsApp</a></li>
           <li><Link href="/login" style={{ color: '#888', textDecoration: 'none', fontSize: 14, fontWeight: 400 }}>Entrar</Link></li>
         </ul>
         <Link href="/signup" style={{
@@ -106,6 +110,14 @@ export default function HomePage() {
             transition: 'color 0.2s, border-color 0.2s',
           }}>
             Ver planos
+          </a>
+          <a href={CARVYS_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" style={{
+            background: 'transparent', color: '#C8F135', fontSize: 15,
+            padding: '15px 34px', borderRadius: 50, textDecoration: 'none',
+            border: '1px solid rgba(200,241,53,0.24)', display: 'inline-block',
+            transition: 'color 0.2s, border-color 0.2s',
+          }}>
+            Falar no WhatsApp
           </a>
         </div>
 
@@ -430,6 +442,7 @@ export default function HomePage() {
               <circle cx="17.5" cy="6.5" r="0.8" fill="#888" stroke="none" />
             </svg>
           </a>
+          <a href={CARVYS_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#444', textDecoration: 'none' }}>WhatsApp</a>
           <Link href="/login" style={{ fontSize: 12, color: '#444', textDecoration: 'none' }}>Entrar</Link>
           <p style={{ fontSize: 12, color: '#444' }}>Privacidade · Termos</p>
         </div>

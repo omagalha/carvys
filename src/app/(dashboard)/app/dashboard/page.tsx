@@ -3,8 +3,11 @@ import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { Car, Users, Bell, TrendingUp, ArrowUpRight, Plus, Clock, CheckCircle2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getUserTenants } from '@/server/queries/tenants'
 import { getMonthlySales, calcSummary } from '@/server/queries/sales'
+import { OnboardingChecklist } from './onboarding-checklist'
+import { whatsappInstanceName } from '@/server/whatsapp-instance'
 
 function fmt(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
@@ -65,7 +68,10 @@ export default async function DashboardPage() {
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
   const todayEnd   = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString()
 
-  const [vehiclesRes, leadsRes, pendingRes, todayRes, sales, vehiclesList, allLeadsRes] = await Promise.all([
+  const admin = createAdminClient()
+  const expectedInstance = whatsappInstanceName(tenant.id)
+
+  const [vehiclesRes, leadsRes, pendingRes, todayRes, sales, vehiclesList, allLeadsRes, waSession] = await Promise.all([
     supabase
       .from('vehicles')
       .select('id', { count: 'exact', head: true })
@@ -104,7 +110,16 @@ export default async function DashboardPage() {
       .from('leads')
       .select('id, stage, expected_value')
       .eq('tenant_id', tenant.id),
+    admin
+      .from('whatsapp_sessions')
+      .select('status, instance_name')
+      .eq('tenant_id', tenant.id)
+      .maybeSingle(),
   ])
+
+  const isWhatsAppConnected =
+    waSession.data?.status === 'connected' &&
+    waSession.data?.instance_name === expectedInstance
 
   const { revenue, profit, count: soldCount } = calcSummary(sales)
   const margin       = revenue > 0 ? Math.round((profit / revenue) * 100) : 0
@@ -179,6 +194,13 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Onboarding checklist */}
+        <OnboardingChecklist
+          hasVehicle={(vehiclesRes.count ?? 0) > 0}
+          hasWhatsApp={isWhatsAppConnected}
+          hasLead={(leadsRes.count ?? 0) > 0}
+        />
 
         {/* KPIs */}
         <div className="grid grid-cols-3 gap-3">

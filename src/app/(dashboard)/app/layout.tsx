@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { getUserTenants } from '@/server/queries/tenants'
 import { TopBar } from '@/components/layout/top-bar'
@@ -13,6 +14,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const memberships = await getUserTenants()
   if (memberships.length === 0) redirect('/onboarding')
+
+  const pathname = (await headers()).get('x-pathname') ?? ''
+  const tenantStatus = memberships[0].tenants.status
+  if (
+    (tenantStatus === 'past_due' || tenantStatus === 'canceled') &&
+    pathname !== '/app/billing'
+  ) {
+    redirect('/app/billing')
+  }
 
   const tenant = memberships[0].tenants
   const profile = user.user_metadata

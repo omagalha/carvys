@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendPaymentOverdueEmail } from '@/lib/email'
+import { sendPlatformMessageOnce } from '@/server/platform-messages'
+import { sendOfficialPlatformWhatsApp } from '@/server/platform-whatsapp'
 
 export async function POST(req: Request) {
   const token = req.headers.get('asaas-access-token')
@@ -63,6 +66,61 @@ export async function POST(req: Request) {
     type: 'payment',
     description: `${EVENT_LABEL[event] ?? event} — R$${payment.value?.toFixed(2).replace('.', ',')}`,
   })
+
+  if (event === 'PAYMENT_OVERDUE') {
+    const { data: membership } = await admin
+      .from('tenant_memberships')
+      .select('user_id')
+      .eq('tenant_id', tenant.id)
+      .eq('role', 'owner')
+      .single()
+
+    if (membership) {
+      const { data: { user: owner } } = await admin.auth.admin.getUserById(membership.user_id)
+      const { data: profile } = await admin
+        .from('profiles')
+        .select('phone')
+        .eq('id', membership.user_id)
+        .maybeSingle()
+      if (owner?.email) {
+        try {
+          const externalRef = String(payment.id ?? payment.dueDate ?? '')
+          await sendPlatformMessageOnce(
+            admin,
+            tenant.id,
+            'payment_overdue',
+            async () => {
+              await sendPaymentOverdueEmail({
+                to: owner.email!,
+                tenantName: tenant.name,
+                value: payment.value ?? 0,
+              })
+              if (profile?.phone) {
+                try {
+                  await sendOfficialPlatformWhatsApp(
+                    profile.phone,
+                    `Ola! Identificamos uma cobranca em atraso da Carvys para ${tenant.name} no valor de R$${(payment.value ?? 0).toFixed(2).replace('.', ',')}.`,
+                  )
+                } catch (e) {
+                  console.error('[asaas webhook] overdue whatsapp error', e)
+                }
+              }
+            },
+            {
+              externalRef,
+              metadata: {
+                asaasPaymentId: payment.id ?? null,
+                dueDate: payment.dueDate ?? null,
+                value: payment.value ?? null,
+              },
+            },
+          )
+        } catch {
+          // não bloqueia o webhook
+        }
+      }
+    }
+  }
 
   return NextResponse.json({ ok: true })
 }

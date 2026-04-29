@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createCustomer, createSubscription, getSubscriptionCharges } from '@/lib/asaas'
+import { createCustomer, createSubscription, getSubscriptionCharges, type AsaasCharge } from '@/lib/asaas'
 import { getUserTenants } from '@/server/queries/tenants'
 
 const PLAN_PRICE: Record<string, number> = {
@@ -50,6 +50,16 @@ export async function subscribePlan(
     .single()
 
   try {
+    // Se já tem assinatura, buscar cobrança pendente/atrasada para pagar
+    if (tenantData?.asaas_subscription_id) {
+      const charges = await getSubscriptionCharges(tenantData.asaas_subscription_id)
+      const payable = (charges as AsaasCharge[]).find(c =>
+        c.status === 'PENDING' || c.status === 'OVERDUE'
+      )
+      if (payable?.invoiceUrl) return { error: '', paymentUrl: payable.invoiceUrl }
+      return { error: 'Você já possui uma assinatura ativa. Entre em contato se precisar de ajuda.' }
+    }
+
     // Criar ou reutilizar cliente Asaas
     let customerId = tenantData?.asaas_customer_id as string | null
 

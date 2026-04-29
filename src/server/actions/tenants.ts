@@ -3,6 +3,10 @@
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { sendWelcomeEmail } from '@/lib/email'
+import { sendPlatformMessageOnce } from '@/server/platform-messages'
+import { sendOfficialPlatformWhatsApp } from '@/server/platform-whatsapp'
 
 const createTenantSchema = z.object({
   name: z.string().min(2, 'Nome muito curto').max(80),
@@ -88,6 +92,30 @@ export async function createTenant(
         .from('tenants')
         .update({ whatsapp_phone: parsed.data.phone })
         .eq('id', newMembership.tenant_id)
+    }
+
+    if (newMembership) {
+      const firstName = (user.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? 'voce'
+      try {
+        const admin = createAdminClient()
+        await sendPlatformMessageOnce(admin, newMembership.tenant_id, 'welcome', async () => {
+          await sendWelcomeEmail({
+            to: user.email!,
+            firstName,
+            tenantName: parsed.data.name,
+          })
+          try {
+            await sendOfficialPlatformWhatsApp(
+              parsed.data.phone,
+              `Ola ${firstName}! Bem-vindo a Carvys. Sua loja ${parsed.data.name} foi criada com sucesso.`,
+            )
+          } catch (e) {
+            console.error('[createTenant] welcome whatsapp error', e)
+          }
+        })
+      } catch {
+        // nao bloqueia o onboarding
+      }
     }
   }
 
