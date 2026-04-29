@@ -91,7 +91,7 @@ export async function getOwnerPhone(name: string): Promise<string | null> {
   }
 }
 
-export async function setWebhook(name: string, url: string): Promise<void> {
+export async function setWebhook(name: string, url: string, webhookHeaders?: Record<string, string>): Promise<void> {
   await req(`/webhook/set/${name}`, {
     method: 'POST',
     body: JSON.stringify({
@@ -100,6 +100,7 @@ export async function setWebhook(name: string, url: string): Promise<void> {
       events: ['MESSAGES_UPSERT'],
       webhook_by_events: false,
       webhook_base64: false,
+      ...(webhookHeaders ? { headers: webhookHeaders } : {}),
     }),
   })
 }

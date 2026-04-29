@@ -6,6 +6,7 @@ import { createHash } from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { loginSchema, signupSchema } from '@/lib/validations/auth'
+import { isAdmin } from '@/lib/admin'
 
 const MAX_ATTEMPTS   = 5
 const BLOCK_MINUTES  = 15
@@ -142,7 +143,7 @@ export async function login(
     redirect(returnTo)
   }
 
-  if (user?.email === 'usecarvys@gmail.com') redirect('/admin')
+  if (isAdmin(user?.email)) redirect('/admin')
 
   redirect('/app/dashboard')
 }

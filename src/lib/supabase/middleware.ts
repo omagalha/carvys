@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { isAdmin } from '@/lib/admin'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -51,8 +52,7 @@ export async function updateSession(request: NextRequest) {
       url.pathname = '/login'
       return NextResponse.redirect(url)
     }
-    const ADMIN_EMAILS = ['usecarvys@gmail.com']
-    if (!ADMIN_EMAILS.includes(user.email?.toLowerCase() ?? '')) {
+    if (!isAdmin(user.email)) {
       const url = request.nextUrl.clone()
       url.pathname = '/app/dashboard'
       return NextResponse.redirect(url)

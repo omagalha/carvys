@@ -8,9 +8,7 @@ import { whatsappInstanceName } from '@/server/whatsapp-instance'
 import * as evo from '@/lib/evolution'
 
 function webhookUrl(): string {
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? ''
-  const secret = process.env.WHATSAPP_WEBHOOK_SECRET ?? ''
-  return `${base}/api/webhooks/whatsapp?secret=${encodeURIComponent(secret)}`
+  return `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/api/webhooks/whatsapp`
 }
 
 async function getTenantId(): Promise<string> {
@@ -75,7 +73,8 @@ export async function checkWhatsAppStatus(): Promise<{
       const phone = await evo.getOwnerPhone(name)
       const admin = createAdminClient()
       try {
-        await evo.setWebhook(name, webhookUrl())
+        const secret = process.env.WHATSAPP_WEBHOOK_SECRET ?? ''
+        await evo.setWebhook(name, webhookUrl(), { 'x-webhook-secret': secret })
       } catch (e) {
         console.error('[whatsapp] setWebhook error:', e)
       }

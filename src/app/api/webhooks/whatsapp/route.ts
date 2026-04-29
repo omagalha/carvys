@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Too Many Requests' }, { status: 429 })
   }
 
-  const secret = req.nextUrl.searchParams.get('secret')
+  const secret = req.headers.get('x-webhook-secret')
   if (!secret || secret !== process.env.WHATSAPP_WEBHOOK_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
