@@ -1,24 +1,17 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Calculator, CheckCircle, Loader2 } from 'lucide-react'
+import { Calculator, CheckCircle, Loader2, Info } from 'lucide-react'
 import { createSimulationLead } from '@/server/actions/public'
 
 type Props = {
-  tenantId:    string
-  vehicleId:   string
-  vehicleName: string
+  tenantId:     string
+  vehicleId:    string
+  vehicleName:  string
   vehiclePrice: number
 }
 
 const TERMS = [12, 24, 36, 48, 60]
-const DEFAULT_RATE = 1.49
-
-function calcPMT(pv: number, rate: number, n: number): number {
-  if (rate === 0) return pv / n
-  const r = rate / 100
-  return (pv * r) / (1 - Math.pow(1 + r, -n))
-}
 
 function fmt(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
@@ -38,14 +31,13 @@ export function SimulatorForm({ tenantId, vehicleId, vehicleName, vehiclePrice }
   const [phone,     setPhone]     = useState('')
   const [cpf,       setCpf]       = useState('')
   const [birthDate, setBirthDate] = useState('')
+  const [hasCnh,    setHasCnh]    = useState<boolean | null>(null)
   const [success,   setSuccess]   = useState(false)
   const [error,     setError]     = useState('')
   const [pending,   start]        = useTransition()
 
-  const financed    = Math.max(0, vehiclePrice - entry)
-  const installment = calcPMT(financed, DEFAULT_RATE, months)
-  const total       = installment * months + entry
-  const entryPct   = Math.round((entry / vehiclePrice) * 100)
+  const financed = Math.max(0, vehiclePrice - entry)
+  const entryPct = Math.round((entry / vehiclePrice) * 100)
 
   function handleEntry(e: React.ChangeEvent<HTMLInputElement>) {
     const v = Number(e.target.value.replace(/\D/g, ''))
@@ -63,10 +55,7 @@ export function SimulatorForm({ tenantId, vehicleId, vehicleName, vehiclePrice }
       const res = await createSimulationLead({
         tenantId, vehicleId, vehicleName,
         name, phone, cpf, birthDate,
-        entry, rate: DEFAULT_RATE, months,
-        installment: Math.round(installment),
-        total: Math.round(total),
-        vehiclePrice,
+        entry, months, vehiclePrice, hasCnh,
       })
       if (res.error) { setError(res.error); return }
       setSuccess(true)
@@ -87,22 +76,6 @@ export function SimulatorForm({ tenantId, vehicleId, vehicleName, vehiclePrice }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-
-      {/* Resultado em destaque */}
-      <div className="flex items-end justify-between">
-        <div>
-          <p className="font-body text-[10px] text-white/30 uppercase tracking-widest mb-1">{months}x de</p>
-          <p className="font-display font-bold text-[#C8F135] text-3xl leading-none">
-            {fmt(installment)}
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="font-body text-xs text-white/30">Total a pagar</p>
-          <p className="font-body text-sm font-semibold text-white">{fmt(total)}</p>
-        </div>
-      </div>
-
-      <div className="h-px bg-white/5" />
 
       {/* Entrada */}
       <div className="flex flex-col gap-2">
@@ -132,7 +105,7 @@ export function SimulatorForm({ tenantId, vehicleId, vehicleName, vehiclePrice }
 
       {/* Prazo */}
       <div className="flex flex-col gap-1.5">
-        <label className="font-body text-xs text-white/50">Prazo</label>
+        <label className="font-body text-xs text-white/50">Prazo desejado</label>
         <div className="flex gap-1">
           {TERMS.map(t => (
             <button
@@ -145,7 +118,7 @@ export function SimulatorForm({ tenantId, vehicleId, vehicleName, vehiclePrice }
                   : 'border border-white/10 text-white/40 hover:border-white/20 hover:text-white/60'
               }`}
             >
-              {t}
+              {t}x
             </button>
           ))}
         </div>
@@ -154,15 +127,47 @@ export function SimulatorForm({ tenantId, vehicleId, vehicleName, vehiclePrice }
       {/* Resumo */}
       <div className="rounded-xl bg-white/[0.03] border border-white/5 p-4 flex flex-col gap-2">
         {[
+          { label: 'Valor do veículo', value: fmt(vehiclePrice) },
+          { label: 'Entrada',          value: fmt(entry) },
           { label: 'Valor financiado', value: fmt(financed) },
           { label: 'Prazo',            value: `${months} meses` },
-          { label: 'Total estimado',   value: fmt(total) },
         ].map(({ label, value }) => (
           <div key={label} className="flex justify-between">
             <span className="font-body text-xs text-white/40">{label}</span>
             <span className="font-body text-xs text-white">{value}</span>
           </div>
         ))}
+      </div>
+
+      <div className="h-px bg-white/5" />
+
+      {/* CNH */}
+      <div className="flex flex-col gap-2">
+        <label className="font-body text-xs text-white/50">Possui CNH?</label>
+        <div className="flex gap-2">
+          {([true, false] as const).map(val => (
+            <button
+              key={String(val)}
+              type="button"
+              onClick={() => setHasCnh(val)}
+              className={`flex-1 h-10 rounded-lg font-body text-sm font-semibold transition-colors ${
+                hasCnh === val
+                  ? 'bg-[#C8F135] text-[#0A0A0F]'
+                  : 'border border-white/10 text-white/40 hover:border-white/20 hover:text-white/60'
+              }`}
+            >
+              {val ? 'Sim' : 'Não'}
+            </button>
+          ))}
+        </div>
+        {hasCnh === true && (
+          <div className="flex items-start gap-2 rounded-lg bg-white/[0.03] border border-white/10 p-3">
+            <Info size={14} className="text-white/40 mt-0.5 shrink-0" />
+            <p className="font-body text-xs text-white/50 leading-relaxed">
+              A financeira pode solicitar foto do documento para confirmação do financiamento.
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="h-px bg-white/5" />

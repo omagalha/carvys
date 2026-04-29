@@ -121,21 +121,6 @@ export default function HomePage() {
           </a>
         </div>
 
-        <div style={{
-          marginTop: 80, display: 'flex', gap: 48, flexWrap: 'wrap', justifyContent: 'center',
-          animation: 'fadeUp 0.7s ease forwards 0.65s', opacity: 0,
-        }}>
-          {[
-            { value: '+2.400', label: 'concessionárias ativas' },
-            { value: 'R$ 4,2M', label: 'em vendas geradas/mês' },
-            { value: '34%', label: 'aumento médio em conversão' },
-          ].map(({ value, label }) => (
-            <div key={label} style={{ textAlign: 'center' }}>
-              <strong style={{ display: 'block', fontSize: 28, fontWeight: 600, color: '#F0F0F0', letterSpacing: '-1px' }}>{value}</strong>
-              <span style={{ fontSize: 13, color: '#444' }}>{label}</span>
-            </div>
-          ))}
-        </div>
       </section>
 
       {/* PRICING */}

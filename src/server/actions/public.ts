@@ -123,18 +123,16 @@ type SimulationLeadInput = {
   cpf:          string
   birthDate:    string
   entry:        number
-  rate:         number
   months:       number
-  installment:  number
-  total:        number
   vehiclePrice: number
+  hasCnh:       boolean | null
 }
 
 export async function createSimulationLead(
   input: SimulationLeadInput,
 ): Promise<{ error: string }> {
   const { tenantId, vehicleId, vehicleName, name, phone, cpf, birthDate,
-          entry, rate, months, installment, total, vehiclePrice } = input
+          entry, months, vehiclePrice, hasCnh } = input
 
   if (!name.trim())                              return { error: 'Nome obrigatório.' }
   if (phone.replace(/\D/g, '').length < 10)     return { error: 'WhatsApp inválido.' }
@@ -144,7 +142,7 @@ export async function createSimulationLead(
   const normalizedPhone = phone.replace(/\D/g, '')
   const admin = createAdminClient()
 
-  const simulationData = { entry, rate, months, installment, total, vehicle_price: vehiclePrice }
+  const simulationData = { entry, months, vehicle_price: vehiclePrice, has_cnh: hasCnh }
 
   // Deduplicação por telefone
   const { data: existing } = await admin
@@ -171,7 +169,7 @@ export async function createSimulationLead(
       tenant_id:   tenantId,
       lead_id:     existing.id,
       type:        'note',
-      description: `Nova simulação via site: ${vehicleName} — ${months}x de R$${installment.toLocaleString('pt-BR')}`,
+      description: `Nova simulação via site: ${vehicleName} — ${months}x, entrada ${entry.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}`,
     })
 
     return { error: '' }
@@ -195,7 +193,7 @@ export async function createSimulationLead(
     tenant_id:   tenantId,
     lead_id:     lead.id,
     type:        'note',
-    description: `Simulação via site: ${vehicleName} — ${months}x de R$${installment.toLocaleString('pt-BR')} (entrada R$${entry.toLocaleString('pt-BR')})`,
+    description: `Simulação via site: ${vehicleName} — ${months}x, entrada ${entry.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}`,
   })
 
   // Notifica donos por e-mail
