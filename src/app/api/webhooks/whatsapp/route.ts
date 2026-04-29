@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendTextMessage } from '@/lib/evolution'
+import { makeRateLimiter, checkRateLimit } from '@/lib/rate-limit'
+
+const limiter = makeRateLimiter(120, 60)
 
 type EvolutionPayload = {
   event:    string
@@ -35,6 +38,11 @@ function buildAutoReply(
 }
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown'
+  if (!await checkRateLimit(limiter, `whatsapp:${ip}`)) {
+    return NextResponse.json({ error: 'Too Many Requests' }, { status: 429 })
+  }
+
   const secret = req.nextUrl.searchParams.get('secret')
   if (!secret || secret !== process.env.WHATSAPP_WEBHOOK_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

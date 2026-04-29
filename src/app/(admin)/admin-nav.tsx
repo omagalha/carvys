@@ -2,12 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, BarChart3, Lightbulb, MessageCircle } from 'lucide-react'
+import { LayoutDashboard, Users, BarChart3, Lightbulb, MessageCircle, Zap, Send } from 'lucide-react'
 
 const items = [
   { href: '/admin',              label: 'Overview',    icon: LayoutDashboard, exact: true },
   { href: '/admin/clientes',     label: 'Clientes',    icon: Users },
   { href: '/admin/financeiro',   label: 'Financeiro',  icon: BarChart3 },
+  { href: '/admin/ativacao',     label: 'Ativação',    icon: Zap },
+  { href: '/admin/mensagens',    label: 'Mensagens',   icon: Send },
   { href: '/admin/whatsapp',     label: 'WhatsApp',    icon: MessageCircle },
   { href: '/admin/sugestoes',    label: 'Sugestões',   icon: Lightbulb },
 ]

@@ -1,10 +1,18 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendPaymentOverdueEmail } from '@/lib/email'
 import { sendPlatformMessageOnce } from '@/server/platform-messages'
 import { sendOfficialPlatformWhatsApp } from '@/server/platform-whatsapp'
+import { makeRateLimiter, checkRateLimit } from '@/lib/rate-limit'
 
-export async function POST(req: Request) {
+const limiter = makeRateLimiter(30, 60)
+
+export async function POST(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown'
+  if (!await checkRateLimit(limiter, `asaas:${ip}`)) {
+    return NextResponse.json({ error: 'Too Many Requests' }, { status: 429 })
+  }
+
   const token = req.headers.get('asaas-access-token')
   if (token !== process.env.ASAAS_WEBHOOK_TOKEN) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

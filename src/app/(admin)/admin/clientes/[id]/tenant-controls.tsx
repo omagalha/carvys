@@ -1,7 +1,8 @@
 'use client'
 
 import { useTransition } from 'react'
-import { updateTenantStatus, updateTenantPlan } from '@/server/actions/admin'
+import { CalendarPlus } from 'lucide-react'
+import { updateTenantStatus, updateTenantPlan, extendTrial } from '@/server/actions/admin'
 
 const STATUSES = [
   { value: 'trial',    label: 'Trial' },
@@ -26,6 +27,7 @@ interface Props {
 export function TenantControls({ tenantId, currentStatus, currentPlan }: Props) {
   const [pendingStatus, startStatus] = useTransition()
   const [pendingPlan,   startPlan]   = useTransition()
+  const [pendingTrial,  startTrial]  = useTransition()
 
   return (
     <div className="flex flex-col gap-4">
@@ -62,6 +64,20 @@ export function TenantControls({ tenantId, currentStatus, currentPlan }: Props) 
           {pendingPlan && <span className="font-body text-xs text-slate">Salvando...</span>}
         </div>
       </div>
+
+      {currentStatus === 'trial' && (
+        <div className="flex items-center gap-3 pt-1 border-t border-surface">
+          <button
+            disabled={pendingTrial}
+            onClick={() => startTrial(async () => { await extendTrial(tenantId) })}
+            className="flex items-center gap-2 h-9 px-4 rounded-lg border border-surface text-slate hover:text-white hover:border-slate/40 font-body text-sm transition-colors disabled:opacity-50"
+          >
+            <CalendarPlus size={14} />
+            +7 dias de trial
+          </button>
+          {pendingTrial && <span className="font-body text-xs text-slate">Estendendo...</span>}
+        </div>
+      )}
     </div>
   )
 }

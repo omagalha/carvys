@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { getAllTenants } from '@/server/queries/admin'
-import { Store, Phone, Mail, Car, Users } from 'lucide-react'
+import { Store, Phone, Mail, Car, Users, Wifi, WifiOff, Clock } from 'lucide-react'
 
 const STATUS_LABEL: Record<string, string> = {
   trial:    'Trial',
@@ -90,7 +90,7 @@ export default async function ClientesPage() {
                 </div>
               )}
 
-              <div className="flex gap-4 pt-1 border-t border-surface">
+              <div className="flex flex-wrap gap-4 pt-1 border-t border-surface">
                 <span className="font-body text-xs text-slate flex items-center gap-1">
                   <Car size={11} />
                   {t.vehicle_count} veículo{t.vehicle_count !== 1 ? 's' : ''}
@@ -102,6 +102,16 @@ export default async function ClientesPage() {
                 <span className="font-body text-xs text-slate">
                   {t.member_count} usuário{t.member_count !== 1 ? 's' : ''}
                 </span>
+                <span className={`font-body text-xs flex items-center gap-1 ${t.whatsapp_connected ? 'text-green' : 'text-slate'}`}>
+                  {t.whatsapp_connected ? <Wifi size={11} /> : <WifiOff size={11} />}
+                  WA
+                </span>
+                {t.owner?.last_sign_in_at && (
+                  <span className="font-body text-xs text-slate flex items-center gap-1">
+                    <Clock size={11} />
+                    {formatDate(t.owner.last_sign_in_at)}
+                  </span>
+                )}
               </div>
             </Link>
           ))}

@@ -1,8 +1,22 @@
-import { getAllTenants } from '@/server/queries/admin'
+import Link from 'next/link'
+import { getAllTenants, getRecentGlobalEvents } from '@/server/queries/admin'
 import { Users, Store, TrendingUp, AlertCircle } from 'lucide-react'
 
+const EVENT_ICON: Record<string, string> = {
+  created:        '🟢',
+  status_changed: '🔄',
+  plan_changed:   '💳',
+  payment:        '💰',
+}
+
+function formatDateTime(iso: string) {
+  return new Date(iso).toLocaleString('pt-BR', {
+    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
+  })
+}
+
 export default async function AdminOverviewPage() {
-  const tenants = await getAllTenants()
+  const [tenants, events] = await Promise.all([getAllTenants(), getRecentGlobalEvents()])
 
   const total    = tenants.length
   const trial    = tenants.filter(t => t.status === 'trial').length
@@ -36,26 +50,56 @@ export default async function AdminOverviewPage() {
         ))}
       </div>
 
-      {/* Recentes */}
-      <div className="flex flex-col gap-3">
-        <h2 className="font-body font-semibold text-white text-sm">Últimas lojas cadastradas</h2>
-        <div className="flex flex-col gap-2">
-          {tenants.slice(0, 5).map(t => (
-            <div key={t.id} className="flex items-center gap-4 rounded-xl bg-deep border border-surface p-4">
-              <div className="flex-1 min-w-0">
-                <p className="font-body font-semibold text-white text-sm truncate">{t.name}</p>
-                <p className="font-body text-xs text-slate">{t.owner?.email ?? '—'}</p>
-              </div>
-              <span className={`font-body text-xs px-2 py-0.5 rounded-full ${
-                t.status === 'active'   ? 'bg-green/15 text-green' :
-                t.status === 'trial'    ? 'bg-blue-500/15 text-blue-400' :
-                t.status === 'past_due' ? 'bg-alert/15 text-alert' :
-                'bg-surface text-slate'
-              }`}>
-                {t.status}
-              </span>
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Recentes */}
+        <div className="flex flex-col gap-3">
+          <h2 className="font-body font-semibold text-white text-sm">Últimas lojas cadastradas</h2>
+          <div className="flex flex-col gap-2">
+            {tenants.slice(0, 5).map(t => (
+              <Link key={t.id} href={`/admin/clientes/${t.id}`} className="flex items-center gap-4 rounded-xl bg-deep border border-surface p-4 hover:border-slate/40 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <p className="font-body font-semibold text-white text-sm truncate">{t.name}</p>
+                  <p className="font-body text-xs text-slate">{t.owner?.email ?? '—'}</p>
+                </div>
+                <span className={`font-body text-xs px-2 py-0.5 rounded-full ${
+                  t.status === 'active'   ? 'bg-green/15 text-green' :
+                  t.status === 'trial'    ? 'bg-blue-500/15 text-blue-400' :
+                  t.status === 'past_due' ? 'bg-alert/15 text-alert' :
+                  'bg-surface text-slate'
+                }`}>
+                  {t.status}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Feed de atividade global */}
+        <div className="flex flex-col gap-3">
+          <h2 className="font-body font-semibold text-white text-sm">Atividade recente</h2>
+          {events.length === 0 ? (
+            <p className="font-body text-xs text-slate">Nenhum evento ainda.</p>
+          ) : (
+            <div className="flex flex-col gap-0">
+              {events.slice(0, 15).map((ev, i) => (
+                <div key={ev.id} className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <span className="text-sm leading-none mt-0.5">{EVENT_ICON[ev.type] ?? '📌'}</span>
+                    {i < Math.min(events.length, 15) - 1 && (
+                      <div className="w-px flex-1 bg-surface mt-1 mb-1" />
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-0.5 pb-3">
+                    <p className="font-body text-sm text-white leading-snug">{ev.description}</p>
+                    <p className="font-body text-[10px] text-slate">
+                      <Link href={`/admin/clientes/${ev.tenant_id}`} className="text-green hover:underline">{ev.tenant_name}</Link>
+                      {' · '}{formatDateTime(ev.created_at)}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>
