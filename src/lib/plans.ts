@@ -3,6 +3,7 @@ export const PLAN_LIMITS: Record<string, { maxMembers: number }> = {
   starter: { maxMembers: 1 },
   pro:     { maxMembers: 2 },
   elite:   { maxMembers: 3 },
+  makeup:  { maxMembers: 2 },
 }
 
 export function getPlanLimits(planCode: string) {

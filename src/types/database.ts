@@ -40,6 +40,7 @@ export type Database = {
           slug: string
           plan_code: string
           status: TenantStatus
+          business_type: BusinessType
           created_at: string
           updated_at: string
         }
@@ -49,6 +50,7 @@ export type Database = {
           slug: string
           plan_code?: string
           status?: TenantStatus
+          business_type?: BusinessType
           created_at?: string
           updated_at?: string
         }
@@ -57,8 +59,85 @@ export type Database = {
           slug?: string
           plan_code?: string
           status?: TenantStatus
+          business_type?: BusinessType
           updated_at?: string
         }
+      }
+      products: {
+        Row: {
+          id: string
+          tenant_id: string
+          name: string
+          sku: string | null
+          category: string | null
+          brand: string | null
+          supplier: string | null
+          cost_price: number | null
+          sale_price: number | null
+          photo_path: string | null
+          manufacture_date: string | null
+          expiry_date: string | null
+          quantity: number
+          min_quantity: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          name: string
+          sku?: string | null
+          category?: string | null
+          brand?: string | null
+          supplier?: string | null
+          cost_price?: number | null
+          sale_price?: number | null
+          photo_path?: string | null
+          manufacture_date?: string | null
+          expiry_date?: string | null
+          quantity?: number
+          min_quantity?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          name?: string
+          sku?: string | null
+          category?: string | null
+          brand?: string | null
+          supplier?: string | null
+          cost_price?: number | null
+          sale_price?: number | null
+          photo_path?: string | null
+          manufacture_date?: string | null
+          expiry_date?: string | null
+          quantity?: number
+          min_quantity?: number
+          updated_at?: string
+        }
+      }
+      inventory_movements: {
+        Row: {
+          id: string
+          tenant_id: string
+          product_id: string
+          type: MovementType
+          quantity: number
+          notes: string | null
+          performed_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          product_id: string
+          type: MovementType
+          quantity: number
+          notes?: string | null
+          performed_by?: string | null
+          created_at?: string
+        }
+        Update: Record<string, never>
       }
       tenant_memberships: {
         Row: {
@@ -344,10 +423,12 @@ export type Database = {
 export type TenantRole = 'owner' | 'admin' | 'sales'
 export type MembershipStatus = 'active' | 'invited' | 'disabled'
 export type TenantStatus = 'trial' | 'active' | 'past_due' | 'canceled'
+export type BusinessType = 'car_dealer' | 'makeup_store' | 'garage'
 export type VehicleStatus = 'draft' | 'available' | 'reserved' | 'sold' | 'archived'
 export type LeadStage = 'new' | 'contacted' | 'negotiating' | 'won' | 'lost'
 export type FollowUpStatus = 'pending' | 'done' | 'canceled' | 'overdue'
 export type IntegrationStatus = 'disconnected' | 'connecting' | 'connected' | 'error'
+export type MovementType = 'in' | 'out' | 'return' | 'discard'
 
 export type Tables<T extends keyof Database['public']['Tables']> =
   Database['public']['Tables'][T]['Row']

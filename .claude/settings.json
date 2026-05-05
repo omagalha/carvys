@@ -36,7 +36,9 @@
       "WebFetch(domain:github.com)",
       "WebSearch",
       "Bash(git commit *)",
-      "Bash(xargs ls *)"
+      "Bash(xargs ls *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Thales Magalhães\\\\OneDrive\\\\Desktop\\\\carvys\\\\Carvys\" -Force)",
+      "Bash(Select-Object Name, FullName)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Thales Magalhães\\OneDrive\\Desktop\\carvys"

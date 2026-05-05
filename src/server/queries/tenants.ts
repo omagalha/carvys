@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import type { TenantRole, MembershipStatus, TenantStatus } from '@/types/database'
+import type { TenantRole, MembershipStatus, TenantStatus, BusinessType } from '@/types/database'
 
 export type MembershipWithTenant = {
   role:               TenantRole
@@ -11,6 +11,7 @@ export type MembershipWithTenant = {
     slug: string
     plan_code: string
     status: TenantStatus
+    business_type: BusinessType
     whatsapp_phone: string | null
     contact_email:  string | null
     contact_phone:  string | null
@@ -45,7 +46,7 @@ export async function getUserTenants(): Promise<MembershipWithTenant[]> {
 
   const { data: tenants, error: tenantsError } = await supabase
     .from('tenants')
-    .select('id, name, slug, plan_code, status, whatsapp_phone, contact_email, contact_phone, address, business_hours')
+    .select('id, name, slug, plan_code, status, business_type, whatsapp_phone, contact_email, contact_phone, address, business_hours')
     .in('id', tenantIds)
 
   if (tenantsError) {

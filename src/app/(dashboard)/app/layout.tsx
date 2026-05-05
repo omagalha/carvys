@@ -39,14 +39,22 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <TopBar tenantName={tenant.name} userInitials={initials} tenantId={tenant.id} />
 
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar slug={tenant.slug} plan={tenant.plan_code} canViewFinancials={memberships[0].can_view_financials} />
+        <Sidebar
+          slug={tenant.slug}
+          plan={tenant.plan_code}
+          businessType={tenant.business_type ?? 'car_dealer'}
+          canViewFinancials={memberships[0].can_view_financials}
+        />
 
         <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
           {children}
         </main>
       </div>
 
-      <BottomNav canViewFinancials={memberships[0].can_view_financials} />
+      <BottomNav
+        businessType={tenant.business_type ?? 'car_dealer'}
+        canViewFinancials={memberships[0].can_view_financials}
+      />
     </div>
   )
 }

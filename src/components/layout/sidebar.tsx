@@ -2,9 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Car, Users, Bell, TrendingUp, Settings, ExternalLink, FileText } from 'lucide-react'
+import {
+  LayoutDashboard, Car, Users, Bell, TrendingUp, Settings, ExternalLink,
+  FileText, Package, ArrowLeftRight,
+} from 'lucide-react'
+import type { BusinessType } from '@/types/database'
 
-const BASE_NAV = [
+const CAR_DEALER_NAV = [
   { href: '/app/dashboard',   label: 'Dashboard',  icon: LayoutDashboard },
   { href: '/app/vehicles',    label: 'Estoque',    icon: Car },
   { href: '/app/leads',       label: 'Leads',      icon: Users },
@@ -12,20 +16,34 @@ const BASE_NAV = [
   { href: '/app/relatorios',  label: 'Relatórios', icon: FileText },
 ]
 
+const MAKEUP_STORE_NAV = [
+  { href: '/app/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/app/produtos',  label: 'Produtos',  icon: Package },
+  { href: '/app/estoque',   label: 'Estoque',   icon: ArrowLeftRight },
+  { href: '/app/clientes',  label: 'Clientes',  icon: Users },
+]
+
 const FINANCIAL_NAV = { href: '/app/financeiro', label: 'Financeiro', icon: TrendingUp }
 
 const PLANS_WITH_SITE = ['trial', 'pro', 'elite']
 
+function getNavItems(businessType: BusinessType, canViewFinancials: boolean) {
+  const base = businessType === 'makeup_store' ? MAKEUP_STORE_NAV : CAR_DEALER_NAV
+  if (canViewFinancials && businessType === 'car_dealer') return [...base, FINANCIAL_NAV]
+  return base
+}
+
 interface Props {
   slug:               string
   plan:               string
+  businessType:       BusinessType
   canViewFinancials:  boolean
 }
 
-export function Sidebar({ slug, plan, canViewFinancials }: Props) {
+export function Sidebar({ slug, plan, businessType, canViewFinancials }: Props) {
   const pathname = usePathname()
-  const hasSite  = PLANS_WITH_SITE.includes(plan)
-  const navItems = canViewFinancials ? [...BASE_NAV, FINANCIAL_NAV] : BASE_NAV
+  const hasSite  = PLANS_WITH_SITE.includes(plan) && businessType === 'car_dealer'
+  const navItems = getNavItems(businessType, canViewFinancials)
 
   return (
     <aside className="hidden md:flex flex-col w-56 shrink-0 border-r border-surface bg-deep h-full">
