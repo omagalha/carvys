@@ -9,8 +9,9 @@ import { sendPlatformMessageOnce } from '@/server/platform-messages'
 import { sendOfficialPlatformWhatsApp } from '@/server/platform-whatsapp'
 
 const createTenantSchema = z.object({
-  name: z.string().min(2, 'Nome muito curto').max(80),
-  phone: z.string().min(10, 'Telefone inválido').max(20),
+  name:          z.string().min(2, 'Nome muito curto').max(80),
+  phone:         z.string().min(10, 'Telefone inválido').max(20),
+  business_type: z.enum(['car_dealer', 'makeup_store', 'garage']).default('car_dealer'),
 })
 
 export type CreateTenantState = { error: string }
@@ -30,8 +31,9 @@ export async function createTenant(
   formData: FormData
 ): Promise<CreateTenantState> {
   const raw = {
-    name: formData.get('name') as string,
-    phone: formData.get('phone') as string,
+    name:          formData.get('name') as string,
+    phone:         formData.get('phone') as string,
+    business_type: formData.get('business_type') as string || 'car_dealer',
   }
   const parsed = createTenantSchema.safeParse(raw)
 
@@ -90,7 +92,10 @@ export async function createTenant(
     if (newMembership) {
       await supabase
         .from('tenants')
-        .update({ whatsapp_phone: parsed.data.phone })
+        .update({
+          whatsapp_phone: parsed.data.phone,
+          business_type:  parsed.data.business_type,
+        })
         .eq('id', newMembership.tenant_id)
     }
 
