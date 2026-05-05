@@ -7,12 +7,14 @@ export type AdminTenant = {
   slug: string
   plan_code: string
   status: string
+  business_type: string
   created_at: string
   asaas_customer_id: string | null
   owner: { full_name: string | null; phone: string | null; email: string | null; last_sign_in_at: string | null } | null
   member_count: number
   vehicle_count: number
   lead_count: number
+  product_count: number
   whatsapp_connected: boolean
 }
 
@@ -50,7 +52,7 @@ export async function getAllTenants(): Promise<AdminTenant[]> {
 
   const { data: tenants } = await admin
     .from('tenants')
-    .select('id, name, slug, plan_code, status, created_at, asaas_customer_id')
+    .select('id, name, slug, plan_code, status, business_type, created_at, asaas_customer_id')
     .order('created_at', { ascending: false })
 
   if (!tenants) return []
@@ -58,10 +60,12 @@ export async function getAllTenants(): Promise<AdminTenant[]> {
   const enriched = await Promise.all(
     tenants.map(async (t) => {
       const instanceName = whatsappInstanceName(t.id)
-      const [membersRes, vehiclesRes, leadsRes, waRes] = await Promise.all([
+      const businessType = (t as { business_type?: string }).business_type ?? 'car_dealer'
+      const [membersRes, vehiclesRes, leadsRes, productsRes, waRes] = await Promise.all([
         admin.from('tenant_memberships').select('user_id, role').eq('tenant_id', t.id).eq('status', 'active'),
         admin.from('vehicles').select('id', { count: 'exact', head: true }).eq('tenant_id', t.id),
         admin.from('leads').select('id', { count: 'exact', head: true }).eq('tenant_id', t.id),
+        admin.from('products').select('id', { count: 'exact', head: true }).eq('tenant_id', t.id),
         admin.from('whatsapp_sessions').select('status, instance_name').eq('tenant_id', t.id).maybeSingle(),
       ])
 
@@ -86,11 +90,13 @@ export async function getAllTenants(): Promise<AdminTenant[]> {
 
       return {
         ...t,
+        business_type: businessType,
         asaas_customer_id: (t as { asaas_customer_id?: string | null }).asaas_customer_id ?? null,
         owner,
-        member_count: membersRes.data?.length ?? 0,
+        member_count:  membersRes.data?.length ?? 0,
         vehicle_count: vehiclesRes.count ?? 0,
-        lead_count: leadsRes.count ?? 0,
+        lead_count:    leadsRes.count ?? 0,
+        product_count: productsRes.count ?? 0,
         whatsapp_connected,
       }
     })

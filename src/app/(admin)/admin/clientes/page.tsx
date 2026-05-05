@@ -1,6 +1,7 @@
+import type React from 'react'
 import Link from 'next/link'
 import { getAllTenants } from '@/server/queries/admin'
-import { Store, Phone, Mail, Car, Users, Wifi, WifiOff, Clock } from 'lucide-react'
+import { Store, Phone, Mail, Car, Users, Wifi, WifiOff, Clock, Sparkles } from 'lucide-react'
 
 const STATUS_LABEL: Record<string, string> = {
   trial:    'Trial',
@@ -21,6 +22,13 @@ const PLAN_LABEL: Record<string, string> = {
   starter: 'Starter',
   pro:     'Pro',
   elite:   'Elite',
+  makeup:  'Makeup',
+}
+
+const BUSINESS_TYPE_BADGE: Record<string, { label: string; icon: React.ElementType; className: string }> = {
+  car_dealer:   { label: 'Veículos',  icon: Car,      className: 'text-blue-400 bg-blue-400/10' },
+  makeup_store: { label: 'Maquiagem', icon: Sparkles,  className: 'text-pink-400 bg-pink-400/10' },
+  garage:       { label: 'Oficina',   icon: Store,     className: 'text-orange-400 bg-orange-400/10' },
 }
 
 function formatDate(iso: string) {
@@ -62,6 +70,17 @@ export default async function ClientesPage() {
                     <span className="font-body text-[10px] text-slate bg-surface px-2 py-0.5 rounded-full">
                       {PLAN_LABEL[t.plan_code] ?? t.plan_code}
                     </span>
+                    {(() => {
+                      const badge = BUSINESS_TYPE_BADGE[t.business_type]
+                      if (!badge) return null
+                      const Icon = badge.icon
+                      return (
+                        <span className={`font-body text-[10px] font-medium px-2 py-0.5 rounded-full flex items-center gap-1 ${badge.className}`}>
+                          <Icon size={9} />
+                          {badge.label}
+                        </span>
+                      )
+                    })()}
                   </div>
                   <p className="font-body text-xs text-slate mt-1">Desde {formatDate(t.created_at)}</p>
                 </div>
@@ -91,13 +110,22 @@ export default async function ClientesPage() {
               )}
 
               <div className="flex flex-wrap gap-4 pt-1 border-t border-surface">
-                <span className="font-body text-xs text-slate flex items-center gap-1">
-                  <Car size={11} />
-                  {t.vehicle_count} veículo{t.vehicle_count !== 1 ? 's' : ''}
-                </span>
+                {t.business_type === 'makeup_store' ? (
+                  <span className="font-body text-xs text-slate flex items-center gap-1">
+                    <Sparkles size={11} />
+                    {t.product_count} produto{t.product_count !== 1 ? 's' : ''}
+                  </span>
+                ) : (
+                  <span className="font-body text-xs text-slate flex items-center gap-1">
+                    <Car size={11} />
+                    {t.vehicle_count} veículo{t.vehicle_count !== 1 ? 's' : ''}
+                  </span>
+                )}
                 <span className="font-body text-xs text-slate flex items-center gap-1">
                   <Users size={11} />
-                  {t.lead_count} lead{t.lead_count !== 1 ? 's' : ''}
+                  {t.business_type === 'makeup_store'
+                    ? `${t.lead_count} cliente${t.lead_count !== 1 ? 's' : ''}`
+                    : `${t.lead_count} lead${t.lead_count !== 1 ? 's' : ''}`}
                 </span>
                 <span className="font-body text-xs text-slate">
                   {t.member_count} usuário{t.member_count !== 1 ? 's' : ''}

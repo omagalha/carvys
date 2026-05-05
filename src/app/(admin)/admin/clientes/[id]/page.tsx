@@ -1,6 +1,12 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Mail, Phone, Car, Users, Calendar, MessageCircle, FileText, Activity, Zap, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Mail, Phone, Car, Users, Calendar, MessageCircle, FileText, Activity, Zap, ShieldCheck, Store } from 'lucide-react'
+
+const BUSINESS_TYPE_LABEL: Record<string, string> = {
+  car_dealer:   'Revendedor de veículos',
+  makeup_store: 'Loja de maquiagem',
+  garage:       'Oficina / Mecânica',
+}
 import { getTenantById } from '@/server/queries/admin'
 import { getTenantNotes, getTenantEvents, getTenantPlatformMessages, platformMsgLabel } from '@/server/queries/admin-notes'
 import { TenantControls } from './tenant-controls'
@@ -59,11 +65,18 @@ export default async function ClienteDetailPage({
     })),
   ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
-  const stats = [
-    { label: 'Veículos cadastrados', value: tenant.vehicle_count, icon: Car },
-    { label: 'Leads no funil',       value: tenant.lead_count,   icon: Users },
-    { label: 'Usuários ativos',      value: tenant.member_count, icon: Users },
-  ]
+  const isMakeup = tenant.business_type === 'makeup_store'
+  const stats = isMakeup
+    ? [
+        { label: 'Produtos cadastrados', value: tenant.product_count, icon: Car },
+        { label: 'Clientes',             value: tenant.lead_count,    icon: Users },
+        { label: 'Usuários ativos',      value: tenant.member_count,  icon: Users },
+      ]
+    : [
+        { label: 'Veículos cadastrados', value: tenant.vehicle_count, icon: Car },
+        { label: 'Leads no funil',       value: tenant.lead_count,    icon: Users },
+        { label: 'Usuários ativos',      value: tenant.member_count,  icon: Users },
+      ]
 
   const newClient = isNew(tenant.created_at)
   const waPhone = tenant.owner?.phone?.replace(/\D/g, '')
@@ -157,6 +170,13 @@ export default async function ClienteDetailPage({
       {/* Informações */}
       <section className="flex flex-col gap-3 rounded-xl bg-deep border border-surface p-5">
         <h2 className="font-body font-semibold text-white text-sm">Informações</h2>
+        <div className="flex items-center gap-2">
+          <Store size={14} className="text-slate" />
+          <span className="font-body text-sm text-slate">Ramo</span>
+          <span className="font-body text-sm text-white ml-auto">
+            {BUSINESS_TYPE_LABEL[tenant.business_type] ?? tenant.business_type}
+          </span>
+        </div>
         <div className="flex items-center gap-2">
           <Calendar size={14} className="text-slate" />
           <span className="font-body text-sm text-slate">Cliente desde</span>
