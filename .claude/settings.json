@@ -38,7 +38,9 @@
       "Bash(git commit *)",
       "Bash(xargs ls *)",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Thales Magalhães\\\\OneDrive\\\\Desktop\\\\carvys\\\\Carvys\" -Force)",
-      "Bash(Select-Object Name, FullName)"
+      "Bash(Select-Object Name, FullName)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\Thales Magalhães\\\\OneDrive\\\\Desktop\\\\carvys\\\\Carvys\" -Force | Format-Table Name, @{Name=\"Type\";Expression={if\\($_.PSIsContainer\\){\"DIR\"}else{\"FILE\"}}} -AutoSize)",
+      "Bash(git stash *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Thales Magalhães\\OneDrive\\Desktop\\carvys"

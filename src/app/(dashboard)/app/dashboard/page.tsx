@@ -8,6 +8,7 @@ import { getUserTenants } from '@/server/queries/tenants'
 import { getMonthlySales, calcSummary } from '@/server/queries/sales'
 import { OnboardingChecklist } from './onboarding-checklist'
 import { whatsappInstanceName } from '@/server/whatsapp-instance'
+import { MakeupDashboard } from './makeup-dashboard'
 
 function fmt(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
@@ -56,8 +57,12 @@ export default async function DashboardPage() {
   const memberships = await getUserTenants()
   if (memberships.length === 0) redirect('/onboarding')
 
-  const tenant    = memberships[0].tenants as { id: string; name: string }
+  const tenant    = memberships[0].tenants as { id: string; name: string; business_type: string }
   const firstName = (user.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? 'você'
+
+  if (tenant.business_type === 'makeup_store') {
+    return <MakeupDashboard tenantId={tenant.id} firstName={firstName} />
+  }
 
   const now       = new Date()
   const hour      = now.getHours()
