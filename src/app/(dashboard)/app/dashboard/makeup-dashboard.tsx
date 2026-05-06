@@ -32,7 +32,7 @@ type SaleRow = {
   quantity: number
   unit_price: number
   sold_at: string
-  products: { name: string } | null
+  products: { name: string }[] | null
 }
 
 export async function MakeupDashboard({ tenantId, firstName }: Props) {
@@ -217,7 +217,7 @@ export async function MakeupDashboard({ tenantId, firstName }: Props) {
                 <div key={sale.id} className="flex items-center gap-3 rounded-lg border border-surface bg-surface/30 px-3 py-2.5">
                   <div className="flex flex-col gap-0.5 flex-1 min-w-0">
                     <span className="font-body text-sm text-white truncate">{sale.contact_name}</span>
-                    <span className="font-body text-[11px] text-slate truncate">{sale.products?.name ?? '—'}</span>
+                    <span className="font-body text-[11px] text-slate truncate">{sale.products?.[0]?.name ?? '—'}</span>
                   </div>
                   <div className="flex flex-col items-end gap-0.5 shrink-0">
                     <span className="font-body text-sm font-semibold text-white">{fmt(sale.quantity * sale.unit_price)}</span>
